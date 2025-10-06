@@ -1,0 +1,57 @@
+# This is the display name of the workflow, which will appear in the GitHub Actions UI.
+name: Build and Deploy API Gateway 
+
+# This section defines the events that trigger the workflow to run.
+on:
+  push:
+    # Specifies that the workflow should only run if files change in the specified paths.
+    # This prevents the API Gateway from being rebuilt and redeployed if changes are made to other microservices.
+    paths:
+      - 'api-gateway/**'          # Trigger when files in the api-gateway source folder change.
+
+# 'jobs' defines one or more tasks that the workflow will execute, runs in parallel by default
+jobs:
+  # 'build-and-deploy' is the unique ID for this job.
+  build-and-deploy:
+    # Specifies the type of virtual machine the job will run on. 'ubuntu-latest' is a standard Linux environment.
+    runs-on: ubuntu-latest
+
+    # 'steps' is a sequence of tasks that will be executed in order for this job.
+    steps:
+      # Step 1: Download the repository's code onto the runner.
+      # This is necessary so that subsequent steps can access the source code and Dockerfile.
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Log to my docker acccount
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Step 3: Set up Docker Buildx.
+      # This is a best-practice step that enables more advanced and efficient Docker build features.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      # Step 4: This single step builds the image and pushes it to Docker Hub.
+      # There are actions available for this step.
+      - name: Build and Push Docker Image to Docker Hub
+        env: 
+          # Create an environment variable for the image tag using the Docker Hub format.
+          # Format: <dockerhub-username>/<image-name>:<version-tag>
+          # We use the unique Git commit SHA for versioning and traceability.
+          IMAGE_TAG: "${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:0.0.1-SNAPSHOT" # will change this in future
+        run: |
+          # -t tags the image with the name and version defined in IMAGE_TAG.
+          # -f specifies the path to the Dockerfile.
+          # The final argument 'api-gateway' is the build context (the directory containing the source).
+          # Why? The actual building happens in a background process called the Docker Daemon. The first thing docker build does is zip up the entire build context directory and send it to the daemon.
+          # By specifying api-gateway as the context, you are sending only the files relevant to that one service, which is much faster and more secure.
+          docker build -t $IMAGE_TAG -f api-gateway/Dockerfile api-gateway
+
+          # Immediately push the newly built image to Docker Hub.
+          # This command will only succeed if the 'docker login' step ran successfully before this.
+          docker push $IMAGE_TAG
+
