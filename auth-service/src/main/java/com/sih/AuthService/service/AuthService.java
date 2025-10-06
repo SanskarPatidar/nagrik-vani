@@ -110,14 +110,6 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
                 .build();
     }
 
-//    public AuthResponseDTO departmentAdminRegister() {
-//
-//    }
-//
-//    public AuthResponseDTO departmentStaffRegister() {
-//
-//    }
-
     @Transactional
     public AuthResponseDTO login(LoginRequestDTO loginRequestDTO) {
         try {
