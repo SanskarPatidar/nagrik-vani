@@ -23,8 +23,15 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Create Maven settings.xml
-        run: echo "${{ secrets.MAVEN_SETTINGS_XML }}" > settings.xml
+      - name: Create Maven settings.xml from secret
+        uses: damienaicheh/write-file-action@v1.2.2
+        with:
+          # The path to the file you want to create in the workspace.
+          path: settings.xml
+          # The content to write to the file, taken directly from your secret.
+          contents: ${{ secrets.MAVEN_SETTINGS_XML }}
+          # This ensures the action can handle multi-line content.
+          write-mode: overwrite
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
