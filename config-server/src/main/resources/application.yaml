@@ -1,0 +1,47 @@
+# Config Server can apply configuration to itself but will require some startup must configurations
+server:
+  port: 8888   # default port for config server:8888
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: config-server
+  cloud:
+    config:
+      enabled: false # disable config client for config server
+      server:
+#        native:   # for local file search
+#          search-locations: file:///D:/SIH/config-repo
+        git:
+          uri: https://github.com/SanskarPatidar/Sih-Config-Server-Files.git
+          clone-on-start: true # clone repo on startup, so slow startup but fast runtime
+          default-label: main
+
+
+eureka:
+  client:
+    service-url:
+      # ${ENV_VAR:default_value} means use ENV_VAR if it is present, else default
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+  instance:
+    # This is the name that shows up in Eureka
+    app name: config-server
+    # This creates a unique ID for each container instance, e.g., "producer:a1b2c3d4"
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
+
+# distributed tracing using zipkin & sleuth
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expose the prometheus endpoint for scraping, and health for probes
+        include: prometheus,health
+  tracing:
+    sampling:
+      # Trace 100% of requests. For production, you'd lower this to 0.1 (10%).
+      probability: 1.0
+  zipkin:
+    tracing:
+      # Inside Docker, the address of the zipkin container is its service name.
+      endpoint: ${ZIPKIN_CONNECTION_URL}
+

@@ -1,0 +1,34 @@
+-d : Detached mode, runs container in the background, so to get your terminal back
+-i : Interactive mode, keeps inputs open
+
+docker ps — List running containers
+docker ps -a — List all containers (running and stopped)
+docker images — List all images
+
+---------------------------------------------------------------------------------------------------
+docker-compose --help : Get help on docker-compose commands
+
+docker login : Log in to Docker Hub
+docker-compose build : Build or rebuild services defined in docker-compose.yml
+docker push <docker-username>/service-registry:0.0.1-SNAPSHOT : push an image to Docker Hub, this is image name, can also do this from docker desktop if have conventional name of image
+
+docker-compose up -d : Start all services
+docker-compose up --build -d : Rebuild and start all services
+docker-compose build producer : Build a specific service (e.g., producer)
+docker-compose build --no-cache : Build with a clean cache: Forces a complete rebuild from scratch, ignoring all cache layers. This is the "scorched-earth" option for when a build is stuck.
+
+docker-compose down : Stop and remove services defined in docker-compose.yml
+docker-compose down -v : Stop and remove containers AND data: The -v flag also removes the data volumes (like Kafka's data), giving you a clean slate.
+
+docker-compose ps : List all running services
+
+docker-compose restart prometheus : Restart a single service: Quickly restarts a specific container
+
+# If using up then do --build, otherwise use build command
+# If you don't mention service-name, it will start all services in the compose file
+docker-compose --env-file <env-file-path> up -d <service-name> : Start a specific service with a custom environment file
+docker-compose --env-file <env-file-path> up --build -d <service-name> : Rebuild and start a specific service with a custom environment file
+docker-compose --env-file <env-file-path> build <service-name> : Just build a specific service with a custom environment file
+
+# debugging
+docker-compose --env-file <env-file-path> config : Validate and view the effective configuration: Useful for checking that your docker-compose.yml and .env files are set up correctly.

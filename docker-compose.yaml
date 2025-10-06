@@ -1,0 +1,256 @@
+services:
+  # 'service-registry:' is the logical name you give to this service inside Docker Compose.
+  service-registry:
+    # 'build:' tells Docker Compose to build a custom image from a Dockerfile.
+    build:
+      # 'context: .' specifies the build context. '.' means use the entire root project folder.
+      # This is crucial so Maven can find the parent pom.xml.
+      context: .
+      # relative to the context.
+      dockerfile: service-registry/Dockerfile
+      args:
+        - MODULE_DIR=service-registry
+      secrets:
+        # This makes the 'maven-settings' secret available to the Dockerfile
+        - maven-settings
+    # 'image:' is the name and tag that will be assigned to the new image after it's built.
+    # keep this consistent with the artifactId and version in pom.xml
+    # conventional naming: <dockerhub-username>/<artifactId>:<version>
+    image: ${DOCKER_USERNAME}/service-registry:0.0.1-SNAPSHOT
+    # 'container_name:' gives the running container a fixed, predictable name.
+    # This also becomes its hostname on the internal Docker network.
+    container_name: service-registry
+    # 'ports:' is the section for mapping ports from your local machine to the container.
+    ports:
+      # This is in the format "EXTERNAL_PORT:INTERNAL_PORT".
+      - "8761:8761"
+    environment:
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  config-server:
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+      args:
+        - MODULE_DIR=config-server
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/config-server:0.0.1-SNAPSHOT
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    depends_on:
+      - service-registry # Waits for the registry to be running before starting.
+    environment:
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  # OBSERVABILITY TOOLS
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      # mounts your local prometheus config file inside the container
+      # NOTE: use .yml not .yaml for the filename extension
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    command: --config.file=/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+
+  # MICROSERVICES
+
+  # NOTE: Service within docker network can communication with each other using http://<service-name>:<service-port>/<endpoint>
+  api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+      args:
+        - MODULE_DIR=api-gateway
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/api-gateway:0.0.1-SNAPSHOT
+    container_name: api-gateway
+    ports:
+      - "8080:8080" # For internal port in docker image, order gets reversed: GitHub repo property > local property
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    environment:
+      - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+      args:
+        - MODULE_DIR=auth-service
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/auth-service:0.0.1-SNAPSHOT
+    container_name: auth-service
+    ports:
+      - "8081:8081"
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    environment:
+      - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  citizen-service:
+    build:
+      context: .
+      dockerfile: citizen-service/Dockerfile
+      args:
+        - MODULE_DIR=citizen-service
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/citizen-service:0.0.1-SNAPSHOT
+    container_name: citizen-service
+    ports:
+      - "8082:8082"
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    environment:
+      - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  complaint-service:
+    build:
+      context: .
+      dockerfile: complaint-service/Dockerfile
+      args:
+        - MODULE_DIR=complaint-service
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/complaint-service:0.0.1-SNAPSHOT
+    container_name: complaint-service
+    ports:
+      - "8083:8083"
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    environment:
+      - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  department-admin-service:
+    build:
+      context: .
+      dockerfile: department-admin-service/Dockerfile
+      args:
+        - MODULE_DIR=department-admin-service
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/department-admin-service:0.0.1-SNAPSHOT
+    container_name: department-admin-service
+    ports:
+      - "8084:8084"
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    environment:
+      - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  department-staff-service:
+    build:
+      context: .
+      dockerfile: department-staff-service/Dockerfile
+      args:
+        - MODULE_DIR=department-staff-service
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/department-staff-service:0.0.1-SNAPSHOT
+    container_name: department-staff-service
+    ports:
+      - "8085:8085"
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    environment:
+      - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+  issue-service:
+    build:
+      context: .
+      dockerfile: issue-service/Dockerfile
+      args:
+        - MODULE_DIR=issue-service
+      secrets:
+        - maven-settings
+    image: ${DOCKER_USERNAME}/issue-service:0.0.1-SNAPSHOT
+    container_name: issue-service
+    ports:
+      - "8086:8086"
+    depends_on:
+      - service-registry
+      - config-server
+      - zipkin
+    environment:
+      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
+      - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_PORT=${REDIS_PORT}
+      - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+
+secrets:
+  maven-settings:
+    # Docker Compose will correctly handle this Windows path to proper Linux environment path
+    file: ${SETTINGS_XML_PATH}

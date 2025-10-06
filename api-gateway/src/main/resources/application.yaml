@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: api-gateway # so by which name configuration needs to be fetched
+  config:
+    import: optional:configserver:${SPRING_CONFIG_SERVER_CONNECTION} # connection string to config server, optional means if config server is not available, app should start with default values
+  cloud:
+    config: # Configuration for Spring Cloud Config, config service discovery
+      discovery:
+        enabled: true
+        service-id: config-server

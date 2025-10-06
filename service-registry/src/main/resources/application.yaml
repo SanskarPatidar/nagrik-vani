@@ -1,0 +1,31 @@
+server:
+  port: 8761
+  address: 0.0.0.0
+
+spring:
+  application:
+    name: service-registry
+
+eureka:
+  client:
+    # Since this is the Eureka Server, it should not register with itself
+    register-with-eureka: false
+    fetch-registry: false
+  instance:
+    app name: service-registry
+
+# distributed tracing using zipkin & sleuth
+management:
+  endpoints:
+    web:
+      exposure:
+        # Expose the prometheus endpoint for scraping, and health for probes
+        include: prometheus,health
+  tracing:
+    sampling:
+      # Trace 100% of requests. For production, you'd lower this to 0.1 (10%).
+      probability: 1.0
+  zipkin:
+    tracing:
+      # Inside Docker, the address of the zipkin container is its service name.
+      endpoint: ${ZIPKIN_CONNECTION_URL}

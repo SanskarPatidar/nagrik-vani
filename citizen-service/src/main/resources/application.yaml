@@ -1,0 +1,5 @@
+spring:
+  application:
+    name: citizen-service
+  config:
+    import: optional:configserver:${SPRING_CONFIG_SERVER_CONNECTION}
