@@ -24,6 +24,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -67,6 +68,7 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
     @Autowired
     private CitizenClient citizenClient;
 
+    @Transactional
     public AuthResponseDTO citizenRegister(RegisterRequestDTO registerRequestDTO) {
         if (repo.existsByUsername(registerRequestDTO.getUsername())) {
             throw new RuntimeException("Username already exists.");
@@ -116,6 +118,7 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
 //
 //    }
 
+    @Transactional
     public AuthResponseDTO login(LoginRequestDTO loginRequestDTO) {
         try {
             // Calls UserDetailsService which was passed to AuthProvider in SecurityConfig
@@ -153,6 +156,7 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
         }
     }
 
+
     private void revokeAllUserTokens(User user, String deviceId) {
         var validUserTokens = tokenRepository.findValidTokensByUserIdAndDeviceId(user.getId(), deviceId);
         if (validUserTokens.isEmpty())
@@ -166,6 +170,7 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
         tokenRepository.saveAll(validUserTokens);
     }
 
+    @Transactional
     public AuthResponseDTO refresh(String deviceId, HttpServletRequest request) throws IOException {
         // JWT filter like validation
         String raw = request.getHeader(HttpHeaders.AUTHORIZATION);
