@@ -17,7 +17,7 @@ public class MyUserDetailsService implements UserDetailsService { // for mapping
         // since this function requires UserDetails so we give it
         return repo.findByUsername(loginString)
                 .or(() -> repo.findByEmail(loginString))
-                .map(UserPrincipal::new) // same as map(it -> new UserPrincipal(it)), ::UserPrincipal in Kotlin
+                .map(UserPrincipal::new)
                 .orElseThrow(() -> new RuntimeException("User not found"));// in java, class has to be functional interface to have its constructor reference
     }
 }
