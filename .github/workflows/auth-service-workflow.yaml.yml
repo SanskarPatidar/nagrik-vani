@@ -14,16 +14,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-# --- ADD THIS TEMPORARY DEBUGGING STEP ---
-          # --- ADD THIS NEW, MORE ROBUST DEBUGGING STEP ---
-      - name: ▀▄▀▄▀▄ DEBUG - Inspect Secret Content (v2) ▄▀▄▀▄▀
-        run: |
-          echo "--- Start of Base64 Secret ---"
-          base64 <<< "${{ secrets.MAVEN_SETTINGS_XML }}"
-          echo "--- End of Base64 Secret ---"
-          exit 1
-          # ---------------------------------------------------
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -39,7 +29,7 @@ jobs:
           # The path to the file you want to create in the workspace.
           path: ./settings.xml
           # The content to write to the file, taken directly from your secret.
-          contents: ${{ secrets.MAVEN_SETTINGS_XML }}
+          contents: "${{ secrets.MAVEN_SETTINGS_XML }}"
           # This ensures the action can handle multi-line content.
           write-mode: overwrite
 
