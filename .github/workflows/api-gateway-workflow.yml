@@ -4,10 +4,12 @@ name: Build and Deploy API Gateway
 # This section defines the events that trigger the workflow to run.
 on:
   push:
+    branches: [ "main" ]
     # Specifies that the workflow should only run if files change in the specified paths.
     # This prevents the API Gateway from being rebuilt and redeployed if changes are made to other microservices.
     paths:
       - 'api-gateway/**'          # Trigger when files in the api-gateway source folder change.
+      - 'pom.xml'               # Trigger when the root pom.xml file changes (e.g., dependency updates).
 
 # 'jobs' defines one or more tasks that the workflow will execute, runs in parallel by default
 jobs:
@@ -50,8 +52,5 @@ jobs:
           # Why? The actual building happens in a background process called the Docker Daemon. The first thing docker build does is zip up the entire build context directory and send it to the daemon.
           # By specifying api-gateway as the context, you are sending only the files relevant to that one service, which is much faster and more secure.
           docker build -t $IMAGE_TAG -f api-gateway/Dockerfile api-gateway
-
-          # Immediately push the newly built image to Docker Hub.
-          # This command will only succeed if the 'docker login' step ran successfully before this.
           docker push $IMAGE_TAG
 
