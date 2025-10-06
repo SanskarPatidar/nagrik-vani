@@ -23,9 +23,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Build and Push Docker Image to Docker Hub
-        env:
-          IMAGE_TAG: "${{ secrets.DOCKERHUB_USERNAME }}/issue-service:0.0.1-SNAPSHOT"
-        run: |
-          docker build -t $IMAGE_TAG -f issue-service/Dockerfile issue-service
-          docker push $IMAGE_TAG
+      - name: Create Maven settings.xml
+        run: echo "${{ secrets.MAVEN_SETTINGS_XML }}" > settings.xml
+
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./issue-service/Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/issue-service:latest 
+            ${{ secrets.DOCKERHUB_USERNAME }}/issue-service:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/issue-service:0.0.1-SNAPSHOT
+          build-args: |
+            MODULE_DIR=issue-service
+          secrets: |
+            maven-settings=settings.xml
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

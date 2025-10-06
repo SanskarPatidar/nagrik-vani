@@ -37,20 +37,34 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
+      # This step creates the settings.xml file on the runner from the GitHub secret.
+      # The build-push-action will then pass this file into the build as a Docker secret.
+      - name: Create Maven settings.xml
+        run: echo "${{ secrets.MAVEN_SETTINGS_XML }}" > settings.xml
+
       # Step 4: This single step builds the image and pushes it to Docker Hub.
-      # There are actions available for this step.
-      - name: Build and Push Docker Image to Docker Hub
-        env: 
-          # Create an environment variable for the image tag using the Docker Hub format.
-          # Format: <dockerhub-username>/<image-name>:<version-tag>
-          # We use the unique Git commit SHA for versioning and traceability.
-          IMAGE_TAG: "${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:0.0.1-SNAPSHOT" # will change this in future
-        run: |
-          # -t tags the image with the name and version defined in IMAGE_TAG.
-          # -f specifies the path to the Dockerfile.
-          # The final argument 'api-gateway' is the build context (the directory containing the source).
-          # Why? The actual building happens in a background process called the Docker Daemon. The first thing docker build does is zip up the entire build context directory and send it to the daemon.
-          # By specifying api-gateway as the context, you are sending only the files relevant to that one service, which is much faster and more secure.
-          docker build -t $IMAGE_TAG -f api-gateway/Dockerfile api-gateway
-          docker push $IMAGE_TAG
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          # The context is the root of the repository.
+          context: .
+          # Specifies the path to this service's Dockerfile.
+          file: ./api-gateway/Dockerfile
+          # Tells the action to push after a successful build.
+          push: true
+          # A list of dynamic tags for traceability.
+          # latest(convention) always points to the most recently successful build
+          # github.sha is in-build commit hash for traceability
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest 
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:0.0.1-SNAPSHOT
+          build-args: |
+            MODULE_DIR=api-gateway
+          # Provides the required Maven settings file as a Docker secret.
+          secrets: |
+            maven-settings=settings.xml
+          # Enables caching between workflows
+          cache-from: type=gha # can use scope tag to segregate single workflow multi cache system
+          cache-to: type=gha,mode=max
 
