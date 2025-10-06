@@ -30,7 +30,7 @@ public class SecurityConfig {
     private JWTFilter jwtFilter;
 
     @Autowired
-    private LogoutHandler logoutHandler; // custom logout handler
+    private LogoutHandler logoutHandler;
 
     @Autowired
     private UserDetailsService userDetailsService;
