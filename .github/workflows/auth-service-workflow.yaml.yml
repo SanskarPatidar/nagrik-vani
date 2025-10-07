@@ -17,7 +17,7 @@ jobs:
       - name: Prepare Maven Settings
         run: |
           # Decode and save to file in the repo root (build context)
-          echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
+          echo "${{ secrets.MAVEN_SETTINGS_XML }}" > settings.xml
           sed -i 's/\r$//' settings.xml
           xxd -l 10 settings.xml
           file settings.xml
@@ -46,6 +46,6 @@ jobs:
           build-args: |
             MODULE_DIR=auth-service
           secrets: |
-            maven-settings=./settings.xml
+            maven-settings=settings.xml
           cache-from: type=gha
           cache-to: type=gha,mode=max
