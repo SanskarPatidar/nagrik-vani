@@ -17,7 +17,7 @@ jobs:
       - name: Prepare Maven Settings
         run: |
           # Decode and save to file in the repo root (build context)
-          echo "${{ secrets.MAVEN_SETTINGS_BASE64 }}" | base64 -d > settings.xml
+          echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
           # Verify it's valid XML
           echo "First line of settings.xml:"
           head -1 settings.xml
