@@ -46,6 +46,6 @@ jobs:
           build-args: |
             MODULE_DIR=auth-service
           secrets: |
-            maven-settings=settings.xml
+            id=maven-settings,src=settings.xml
           cache-from: type=gha
           cache-to: type=gha,mode=max
