@@ -20,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /*
-QUESTION: Why need to authenticate the token in SecurityContextHolder, when we are validating the token ourselves?
+QUESTION: Why need to authenticate the token in SecurityContextHolder when we are validating the token ourselves?
 ANSWER: Hold this validated token to later access in code and no need to call repository to access info which are already present in the token.
  */
 
