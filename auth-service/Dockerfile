@@ -29,6 +29,7 @@ COPY issue-service/pom.xml ./issue-service/
 COPY service-registry/pom.xml ./service-registry/
 # (If you add more modules, add a COPY line for their pom.xml here)
 
+# settings.xml is present at the root directory
 COPY settings.xml /root/.m2/settings.xml
 RUN ./mvnw dependency:go-offline --settings /root/.m2/settings.xml
 
