@@ -10,9 +10,6 @@ services:
       dockerfile: service-registry/Dockerfile
       args:
         - MODULE_DIR=service-registry
-      secrets:
-        # This makes the 'maven-settings' secret available to the Dockerfile
-        - maven-settings
     # 'image:' is the name and tag that will be assigned to the new image after it's built.
     # keep this consistent with the artifactId and version in pom.xml
     # conventional naming: <dockerhub-username>/<artifactId>:<version>
@@ -33,8 +30,6 @@ services:
       dockerfile: config-server/Dockerfile
       args:
         - MODULE_DIR=config-server
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/config-server:0.0.1-SNAPSHOT
     container_name: config-server
     ports:
@@ -81,8 +76,6 @@ services:
       dockerfile: api-gateway/Dockerfile
       args:
         - MODULE_DIR=api-gateway
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/api-gateway:0.0.1-SNAPSHOT
     container_name: api-gateway
     ports:
@@ -106,8 +99,6 @@ services:
       dockerfile: auth-service/Dockerfile
       args:
         - MODULE_DIR=auth-service
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/auth-service:0.0.1-SNAPSHOT
     container_name: auth-service
     ports:
@@ -124,6 +115,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
 
   citizen-service:
     build:
@@ -131,8 +123,6 @@ services:
       dockerfile: citizen-service/Dockerfile
       args:
         - MODULE_DIR=citizen-service
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/citizen-service:0.0.1-SNAPSHOT
     container_name: citizen-service
     ports:
@@ -156,8 +146,6 @@ services:
       dockerfile: complaint-service/Dockerfile
       args:
         - MODULE_DIR=complaint-service
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/complaint-service:0.0.1-SNAPSHOT
     container_name: complaint-service
     ports:
@@ -181,8 +169,6 @@ services:
       dockerfile: department-admin-service/Dockerfile
       args:
         - MODULE_DIR=department-admin-service
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/department-admin-service:0.0.1-SNAPSHOT
     container_name: department-admin-service
     ports:
@@ -206,8 +192,6 @@ services:
       dockerfile: department-staff-service/Dockerfile
       args:
         - MODULE_DIR=department-staff-service
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/department-staff-service:0.0.1-SNAPSHOT
     container_name: department-staff-service
     ports:
@@ -231,8 +215,6 @@ services:
       dockerfile: issue-service/Dockerfile
       args:
         - MODULE_DIR=issue-service
-      secrets:
-        - maven-settings
     image: ${DOCKER_USERNAME}/issue-service:0.0.1-SNAPSHOT
     container_name: issue-service
     ports:
@@ -250,7 +232,3 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
 
-secrets:
-  maven-settings:
-    # Docker Compose will correctly handle this Windows path to proper Linux environment path
-    file: ${SETTINGS_XML_PATH}

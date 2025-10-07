@@ -14,6 +14,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Prepare Maven Settings
+        run: |
+          # Decode and save to file in the repo root (build context)
+          echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
+
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -23,9 +28,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      - name: Create Maven settings.xml
-        run: echo "${{ secrets.MAVEN_SETTINGS_XML }}" > settings.xml
-
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
@@ -33,12 +35,11 @@ jobs:
           file: ./department-admin-service/Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/department-admin-service:latest 
+            ${{ secrets.DOCKERHUB_USERNAME }}/department-admin-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/department-admin-service:${{ github.sha }}
             ${{ secrets.DOCKERHUB_USERNAME }}/department-admin-service:0.0.1-SNAPSHOT
           build-args: |
             MODULE_DIR=department-admin-service
-          secrets: |
-            maven-settings=settings.xml
+
           cache-from: type=gha
           cache-to: type=gha,mode=max

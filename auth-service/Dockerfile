@@ -11,7 +11,7 @@ ARG MODULE_DIR
 
 # STAGE 1: Dependency Resolver (uses only POM files) - decoupled this from builder stage
 # This stage is optimized for caching by downloading dependencies before working on source code.
-FROM eclipse-temurin:21-jdk-alpine AS DEPENDENCIES
+FROM eclipse-temurin:21-jdk-alpine AS dependencies
 WORKDIR /app
 
 # Copy only the files needed to resolve dependencies and create the full dependency tree
@@ -29,23 +29,18 @@ COPY issue-service/pom.xml ./issue-service/
 COPY service-registry/pom.xml ./service-registry/
 # (If you add more modules, add a COPY line for their pom.xml here)
 
-# settings.xml is present at the root directory
+# settings.xml is present at the root directory, if not then bring it anyhow
 COPY settings.xml /root/.m2/settings.xml
 RUN ./mvnw dependency:go-offline --settings /root/.m2/settings.xml
 
-# Download all dependencies
-# Securely mount the settings.xml file ONLY for this command
-#RUN --mount=type=secret,id=maven-settings,target=/root/.m2/settings.xml \
-#    ./mvnw dependency:go-offline --settings /root/.m2/settings.xml
-
 # STAGE 2: Builder (compiles the application and creates the layered JAR rather than fat jar)
 # Requires whole jdk for building the application, rather than just jre
-FROM eclipse-temurin:21-jdk-alpine AS BUILDER
+FROM eclipse-temurin:21-jdk-alpine AS builder
 # This brings the top level variable into the stage's scope
 ARG MODULE_DIR
 WORKDIR /app
 # Copy the cached maven dependencies from the previous stage
-COPY --from=DEPENDENCIES /root/.m2 /root/.m2
+COPY --from=dependencies /root/.m2 /root/.m2
 
 # Copy from a previous stage would only be more efficient if these files were very large or if you were copying many files that would significantly impact build time.
 COPY .mvn/ .mvn/
@@ -64,26 +59,24 @@ COPY service-registry/pom.xml ./service-registry/
 COPY ${MODULE_DIR}/src ./${MODULE_DIR}/src
 RUN ./mvnw package -DskipTests -pl ${MODULE_DIR} -am
 
-
-# STAGE 3: EXTRACTOR (extracts the layers from the JAR)
-FROM eclipse-temurin:21-jre-alpine AS EXTRACTOR
+# STAGE 3: Extractor (extracts the layers from the JAR)
+FROM eclipse-temurin:21-jre-alpine AS extractor
 ARG MODULE_DIR
 # Just to keep things organized, create a directory for extraction
 WORKDIR /extracted
 # Copy the specific JAR from the builder stage
-COPY --from=BUILDER /app/${MODULE_DIR}/target/*.jar application.jar
+COPY --from=builder /app/${MODULE_DIR}/target/*.jar application.jar
 # Extract the layers using Spring Boot's built-in support
 RUN java -Djarmode=layertools -jar application.jar extract
 
-
-# STAGE 4: FINAL IMAGE (assembles the lean, production image from the layers)
+# STAGE 4: Final Image Creation (assembles the lean, production image from the layers)
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /application
 # Copy the extracted layers from the extractor stage in the optimal order
-COPY --from=EXTRACTOR /extracted/dependencies/ ./
-COPY --from=EXTRACTOR /extracted/spring-boot-loader/ ./
-COPY --from=EXTRACTOR /extracted/snapshot-dependencies/ ./
-COPY --from=EXTRACTOR /extracted/application/ ./
+COPY --from=extractor /extracted/dependencies/ ./
+COPY --from=extractor /extracted/spring-boot-loader/ ./
+COPY --from=extractor /extracted/snapshot-dependencies/ ./
+COPY --from=extractor /extracted/application/ ./
 
 # Container listens on port 8080
 EXPOSE 8080

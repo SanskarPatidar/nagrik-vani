@@ -1,11 +1,9 @@
 package com.sih.AuthService.service;
 
-import com.sih.AuthService.config.AppCache;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -19,14 +17,14 @@ import java.util.function.Function;
 @Component
 public class JWTGenerator {
 
-    @Autowired
-    private AppCache appCache;
-
     @Value("${access_token_expiration}")
     private long accessTokenExpirationMillis;
 
     @Value("${refresh_token_expiration}")
-    private long refreshTokenExpirationMillis; // 7 days
+    private long refreshTokenExpirationMillis;
+
+    @Value("${jwt_secret_key}")
+    private String jwtSecretKey;
 
     public String generateAccessToken(String username) {
         return generateTokenWithExpiration(username, accessTokenExpirationMillis);
@@ -52,9 +50,7 @@ public class JWTGenerator {
     }
 
     private SecretKey getKey() {
-        // just assigning key for development purposes
-        String secretKey = "c2VjcmV0S2V5MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=";//appCache.appCacheValues.get(AppCache.CacheKeys.SECRET_KEY.toString()); // property injection from DB
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64.decode(jwtSecretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
