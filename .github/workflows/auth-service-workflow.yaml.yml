@@ -14,8 +14,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Create Maven settings.xml from Base64 secret
-        run: echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 --decode > settings.xml
+      - name: Decode and create settings.xml
+        run: |
+          # Use `echo` with the secret, piped to `base64 --decode`
+          echo "${{ secrets.MAVEN_SETTINGS_XML_BASE64 }}" | base64 --decode > ./settings.xml
+          # Verify that the file was created
+          ls -l ./settings.xml
+          cat ./settings.xml # For debugging purposes only!
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
