@@ -14,10 +14,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Decode and create settings.xml
-        run: |
-          printf "%s" "${{ secrets.MAVEN_SETTINGS_XML_BASE64 }}" | base64 --decode > settings.xml
-
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -40,6 +36,6 @@ jobs:
           build-args: |
             MODULE_DIR=auth-service
           secrets: |
-            maven-settings=settings.xml
+            maven-settings=${{ secrets.MAVEN_SETTINGS_XML_BASE64 }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

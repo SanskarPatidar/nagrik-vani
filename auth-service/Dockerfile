@@ -31,7 +31,9 @@ COPY service-registry/pom.xml ./service-registry/
 
 # Download all dependencies
 # Securely mount the settings.xml file ONLY for this command
-RUN --mount=type=secret,id=maven-settings,target=/root/.m2/settings.xml \
+RUN --mount=type=secret,id=maven-settings \
+    mkdir -p /root/.m2 && \
+    cat /run/secrets/maven-settings | base64 --decode > /root/.m2/settings.xml && \
     ./mvnw dependency:go-offline --settings /root/.m2/settings.xml
 
 # STAGE 2: Builder (compiles the application and creates the layered JAR rather than fat jar)
