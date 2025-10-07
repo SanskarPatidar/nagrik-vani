@@ -29,12 +29,12 @@ COPY issue-service/pom.xml ./issue-service/
 COPY service-registry/pom.xml ./service-registry/
 # (If you add more modules, add a COPY line for their pom.xml here)
 
-
+RUN --mount=type=secret,id=maven-settings,target=/root/.m2/settings.xml \
+    cat -A /root/.m2/settings.xml | head
 
 # Download all dependencies
 # Securely mount the settings.xml file ONLY for this command
 RUN --mount=type=secret,id=maven-settings,target=/root/.m2/settings.xml \
-    cat -A /root/.m2/settings.xml | head && \
     ./mvnw dependency:go-offline --settings /root/.m2/settings.xml
 
 # STAGE 2: Builder (compiles the application and creates the layered JAR rather than fat jar)
