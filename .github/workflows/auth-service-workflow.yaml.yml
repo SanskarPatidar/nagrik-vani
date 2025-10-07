@@ -16,11 +16,14 @@ jobs:
 
       - name: Prepare Maven Settings
         run: |
-          # Decode and ensure no extra whitespace
-          echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
+          # Decode and save to file in the repo root (build context)
+          echo "${{ secrets.MAVEN_SETTINGS_BASE64 }}" | base64 -d > settings.xml
           # Verify it's valid XML
+          echo "First line of settings.xml:"
           head -1 settings.xml
-          # Should print: <?xml version="1.0" encoding="UTF-8"?>
+          echo "Full path:"
+          pwd
+          ls -la settings.xml
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
