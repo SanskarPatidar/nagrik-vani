@@ -18,9 +18,6 @@ jobs:
         run: |
           # Use `echo` with the secret, piped to `base64 --decode`
           echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 --decode > ./settings.xml
-          # Verify that the file was created
-          ls -l ./settings.xml
-          cat ./settings.xml # For debugging purposes only!
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -30,16 +27,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-
-      - name: Create Maven settings.xml from secret
-        uses: BoundfoxStudios/action-write-file@v1
-        with:
-          # The path to the file you want to create in the workspace.
-          path: ./settings.xml
-          # The content to write to the file, taken directly from your secret.
-          contents: ${{ secrets.MAVEN_SETTINGS_XML }}
-          # This ensures the action can handle multi-line content.
-          write-mode: overwrite
 
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
