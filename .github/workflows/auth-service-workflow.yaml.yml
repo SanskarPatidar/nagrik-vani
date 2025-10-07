@@ -19,6 +19,7 @@ jobs:
           # Decode and save to file in the repo root (build context)
           echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
           sed -i 's/\r$//' settings.xml
+          xxd -l 10 settings.xml
           file settings.xml
           head -n 2 settings.xml
       
