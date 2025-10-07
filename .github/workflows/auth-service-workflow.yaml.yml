@@ -17,7 +17,7 @@ jobs:
       - name: Prepare Maven Settings
         run: |
           # Decode and ensure no extra whitespace
-          echo "${{ secrets.MAVEN_SETTINGS_BASE64 }}" | base64 -d > settings.xml
+          echo "${{ secrets.MAVEN_SETTINGS }}" | base64 -d > settings.xml
           # Verify it's valid XML
           head -1 settings.xml
           # Should print: <?xml version="1.0" encoding="UTF-8"?>
