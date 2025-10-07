@@ -16,12 +16,18 @@ jobs:
 
       - name: Prepare Maven Settings
         run: |
-          # Decode and save to file in the repo root (build context)
-          echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
-          sed -i 's/\r$//' settings.xml
-          xxd -l 10 settings.xml
-          file settings.xml
-          head -n 2 settings.xml
+          # Decode the base64 secret
+          echo "${{ secrets.MAVEN_SETTINGS_BASE64 }}" | base64 -d > settings.xml
+          
+          # Verify it's valid
+          echo "File size:"
+          ls -lh settings.xml
+          echo "First line of settings.xml:"
+          head -1 settings.xml
+          
+          # Read the file content and set as output (base64 encoded to preserve formatting)
+          SETTINGS_CONTENT=$(cat settings.xml | base64 -w 0)
+          echo "settings-content=$SETTINGS_CONTENT" >> $GITHUB_OUTPUT
 
       - name: Read Maven Settings
         run: |
@@ -58,6 +64,6 @@ jobs:
           build-args: |
             MODULE_DIR=auth-service
           secrets: |
-            id=maven-settings,src=./settings.xml
+            maven-settings=${{ steps.maven-settings.outputs.settings-content }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
