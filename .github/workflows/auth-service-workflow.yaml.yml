@@ -22,6 +22,18 @@ jobs:
           xxd -l 10 settings.xml
           file settings.xml
           head -n 2 settings.xml
+
+      - name: Read Maven Settings
+        run: |
+          echo "Checking settings.xml file existence and permissions:"
+          ls -la settings.xml
+          
+          echo "Displaying content of settings.xml (with sensitive data masked):"
+          # Display content but mask any passwords or tokens
+          cat settings.xml | sed -E 's/(<password>)([^<]+)(<\/password>)/\1*****\3/g'
+          
+          echo "Validating XML structure:"
+          xmllint --noout settings.xml && echo "✅ XML is valid" || echo "❌ XML has errors"
       
 
       - name: Log in to Docker Hub
