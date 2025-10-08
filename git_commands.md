@@ -40,8 +40,8 @@
 # pull = fetch(download) + rebase(merge) but we will do it separately
 1. git pull origin main --rebase
 2. git pull
-3. git push -u origin [local-branch-name] # for first time push(origin is the default name for the remote), upsert upstream counterpart of this branch
-4. git push # for subsequent pushes
+3. git push -u origin [local-branch-name] # for first time push(origin is the default name for the remote), upsert upstream counterpart of this branch, each branch needs to be set up separately
+4. git push # for subsequent pushes of current branch
 5. git push origin [local-branch-name]:[remote-branch-name]
 6. git push --force-with-lease origin [local-branch-name] # push safely, if remote branch has been updated, it will refuse to push, then we will need to pull, merge, resolve conflicts and then push again
 ```
