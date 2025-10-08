@@ -2,6 +2,17 @@
 1. git help # then follow after more commands
 ```
 --------------------------------------------------------------------
+## Symbols
+```bash
+1. ~ 
+2. ^ 
+3. HEAD # current commit
+# HEAD~1	The first parent of HEAD : Go back one commit in a straight line.
+# HEAD~3	The great-grandparent of HEAD : Go back three commits in a straight line.
+# HEAD^1	The first parent of a merge commit : Navigate to the main branch side of a merge.
+# HEAD^2	The second parent of a merge commit : Navigate to the feature branch side of a merge.
+```
+--------------------------------------------------------------------
 ## Configuration commands
 ```bash
 1. git config # Show all git configurations commands
