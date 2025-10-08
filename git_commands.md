@@ -49,6 +49,19 @@
 8. git rebase origin/[branch-name] # rebase current branch on top of the fetched remote tracking branch
 ```
 --------------------------------------------------------------------
+## Stashing
+Choose this option if the changes are a work-in-progress and you're not ready to make a permanent commit for them yet.
+
+git stash is like a temporary clipboard for your changes. It takes all your uncommitted modifications, puts them on a safe "shelf," and cleans your working directory so you can switch branches.
+
+IT IS A COMMON CLIPBOARD AMONG ALL BRANCHES OF ENTIRE LOCAL REPOSITORY.
+```bash
+1. git stash push -m "Updating git commands doc" # stash current changes with message on top of stash stack, for 
+2. git stash list # list all stashed changes
+3. git stash pop # apply the most recent stash and remove it from the stash stack
+4. git stash apply stash@{n} # apply a specific stash without removing it from the stash stack
+```
+--------------------------------------------------------------------
 ## Branching and Merging commands
 ```bash
       A---B---C   (main)
