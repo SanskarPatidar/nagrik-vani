@@ -44,6 +44,8 @@
 4. git push # for subsequent pushes of current branch
 5. git push origin [local-branch-name]:[remote-branch-name]
 6. git push --force-with-lease origin [local-branch-name] # push safely, if remote branch has been updated, it will refuse to push, then we will need to pull, merge, resolve conflicts and then push again
+7. git fetch origin # fetches changes from remote but does not merge them, it updates the remote tracking branches
+8. git rebase origin/[branch-name] # rebase current branch on top of the fetched remote tracking branch
 ```
 --------------------------------------------------------------------
 ## Branching and Merging commands
