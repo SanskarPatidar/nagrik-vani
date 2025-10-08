@@ -64,7 +64,7 @@
 # more exploration required for rebase
 1. git branch [branch-name] # create new branch
 2. git branch -M [branch-name] # rename current branch to new branch name
-3. git switch -c [branch-name] # create and switch to new branch
+3. git switch -c [branch-name] [optional:commit-hash]# create and switch to new branch
 4. git merge [branch-name] # Merge branch into current branch
 ```
 --------------------------------------------------------------------
