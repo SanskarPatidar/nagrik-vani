@@ -70,7 +70,7 @@
 --------------------------------------------------------------------
 ## Undoing changes commands
 ```bash
-1. git restore [file-name] # discard current changes and restore file of last commit
+1. git restore --source [commit-hash] [file-name] # discard current changes and restore file of last commit
 2. git restore . # discard all current changes and restore all files of last commit
 3. git restore --staged [file-name] # unstage file but keep changes in working directory, if mistakenly added to staging area
 # always run commit for current uncommited changes before running git revert
