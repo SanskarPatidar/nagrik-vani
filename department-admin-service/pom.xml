@@ -32,7 +32,6 @@
         <dependency>
             <groupId>com.sanskar</groupId>
             <artifactId>microservice-client-library</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
 

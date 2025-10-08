@@ -62,7 +62,9 @@
 1. git restore [file-name] # discard current changes and restore file of last commit
 2. git restore . # discard all current changes and restore all files of last commit
 3. git restore --staged [file-name] # unstage file but keep changes in working directory, if mistakenly added to staging area
-4, git revert [commit-hash] # Instead of deleting a commit from the project history, it creates a brand new commit with the resulting inverse changes
+# always run commit for current uncommited changes before running git revert
+4, git revert [commit-hash] # create a new commit and applies the inverse of the changes from the target commit.
+5. git cherry-pick [commit-hash] # create a new commit that applies the changes introduced by an existing commit from same/another branch, this is copy-paste of commit
 ```
 --------------------------------------------------------------------
 ## Diff commands

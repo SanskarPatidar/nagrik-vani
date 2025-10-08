@@ -42,12 +42,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
 
-      # This step creates the settings.xml file on the runner from the GitHub secret.
-      # The build-push-action will then pass this file into the build as a Docker secret.
-      - name: Create Maven settings.xml
-        run: echo "${{ secrets.MAVEN_SETTINGS_XML }}" > settings.xml
-
-      # Step 4: This single step builds the image and pushes it to Docker Hub.
+      # Step 5: This single step builds the image and pushes it to Docker Hub.
       - name: Build and Push Docker Image
         uses: docker/build-push-action@v5
         with:
