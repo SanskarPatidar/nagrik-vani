@@ -1,5 +1,6 @@
 package com.sih.ComplaintService.service;
 
+import com.sanskar.common.exception.FeignCallDelegation;
 import com.sanskar.sih.citizen.CitizenProfileInterchangeDTO;
 import com.sanskar.sih.citizen.CitizenProfileResponseDTO;
 import com.sanskar.sih.complaint.ComplaintRequestDTO;
@@ -10,6 +11,7 @@ import com.sih.ComplaintService.client.CitizenClient;
 import com.sih.ComplaintService.client.IssueClient;
 import com.sih.ComplaintService.model.Complaint;
 import com.sih.ComplaintService.repository.ComplaintRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,16 +24,11 @@ import java.util.UUID;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor // for final or @NonNull fields
 public class ComplaintService {
-
-    @Autowired
-    private CitizenClient citizenClient;
-
-    @Autowired
-    private IssueClient issueClient;
-
-    @Autowired
-    private ComplaintRepository complaintRepository;
+    private final CitizenClient citizenClient;
+    private final IssueClient issueClient;
+    private final ComplaintRepository complaintRepository;
 
     public ComplaintResponseDTO postComplaint(ComplaintRequestDTO request, String userId) {
         log.info("Posting complaint for userId: {}", userId);
@@ -41,19 +38,25 @@ public class ComplaintService {
                 .totalComplaints(1L)
                 .build();
 
-        profile = citizenClient.internalUpdateProfile(profile).getBody();
+        CitizenProfileResponseDTO updatedProfile = FeignCallDelegation.execute(
+                () -> citizenClient.internalUpdateProfile(profile)
+        );
 
         // map complaint to issue
-        IssueInterchangeDTO issue = issueClient.findByTypeAndWithinRadius(
-                request.getType(),
-                request.getLocationLat(),
-                request.getLocationLon(),
-                50.0
-                ).getBody();
+        IssueInterchangeDTO issue = FeignCallDelegation.execute(
+                () -> issueClient.findByTypeAndWithinRadius(
+                        request.getType(),
+                        request.getLocationLat(),
+                        request.getLocationLon(),
+                        50.0
+                )
+        );
 
         // if issue is null, create a new issue
         if(issue == null) {
-            issue = issueClient.createIssue(request).getBody();
+            issue = FeignCallDelegation.execute(
+                    () -> issueClient.createIssue(request)
+            );
         }
 
         log.info("Mapped Issue id: {}", userId);
@@ -61,7 +64,7 @@ public class ComplaintService {
         // create complaint
         Complaint complaint = Complaint.builder()
                 .id(UUID.randomUUID().toString())
-                .citizenId(profile.getId())
+                .citizenId(updatedProfile.getId())
                 .issueId(issue.getId())
                 .createdAt(LocalDateTime.now())
                 .title(request.getTitle())
@@ -80,8 +83,10 @@ public class ComplaintService {
     }
 
     public Page<ComplaintResponseDTO> getMyComplaints(Pageable pageable, String userId) {
-        log.info("Fetching complaints for userId: " + userId);
-        CitizenProfileResponseDTO profile = citizenClient.getCitizenProfile(userId).getBody();
+        log.info("Fetching complaints for userId: {}", userId);
+        CitizenProfileResponseDTO profile = FeignCallDelegation.execute(
+                () -> citizenClient.getCitizenProfile(userId)
+        );
 
         return complaintRepository
                 .findAllByCitizenId(profile.getId(), pageable)
@@ -89,7 +94,7 @@ public class ComplaintService {
     }
 
     public Page<ComplaintResponseDTO> getAllComplaintsByIssueId(Pageable pageable, String issueId) {
-        log.info("Fetching complaints for issueId: " + issueId);
+        log.info("Fetching complaints for issueId: {}", issueId);
         return complaintRepository
                 .findAllByIssueId(issueId, pageable)
                 .map(complaint -> {
@@ -103,7 +108,7 @@ public class ComplaintService {
     }
 
     public void acknowledgeComplaints(String issueId) {
-        log.info("Acknowledging complaints for issueId: " + issueId);
+        log.info("Acknowledging complaints for issueId: {}", issueId);
         complaintRepository.acknowledgeComplaints(issueId);
     }
 }

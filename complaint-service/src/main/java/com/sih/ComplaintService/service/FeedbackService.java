@@ -1,7 +1,10 @@
 package com.sih.ComplaintService.service;
 
 import com.netflix.discovery.converters.Auto;
+import com.sanskar.common.exception.FeignCallDelegation;
 import com.sanskar.sih.citizen.CitizenProfileResponseDTO;
+import com.sanskar.common.exception.NotFoundException;
+import com.sanskar.common.exception.SemanticException;
 import com.sanskar.sih.issue.IssueInterchangeDTO;
 import com.sih.ComplaintService.client.CitizenClient;
 import com.sih.ComplaintService.client.IssueClient;
@@ -10,6 +13,7 @@ import com.sih.ComplaintService.model.Complaint;
 import com.sih.ComplaintService.model.Feedback;
 import com.sih.ComplaintService.repository.ComplaintRepository;
 import com.sih.ComplaintService.repository.FeedbackRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,28 +23,24 @@ import java.util.UUID;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor // for final or @NonNull fields
 public class FeedbackService {
-
-    @Autowired
-    private FeedbackRepository feedbackRepository;
-
-    @Autowired
-    private ComplaintRepository complaintRepository;
-
-    @Autowired
-    private IssueClient issueClient;
-
-    @Autowired
-    private CitizenClient citizenClient;
+    private final FeedbackRepository feedbackRepository;
+    private final ComplaintRepository complaintRepository;
+    private final IssueClient issueClient;
+    private final CitizenClient citizenClient;
 
     public void upsertFeedback(FeedbackRequestDTO request, String userId) {
+        log.info("Upserting feedback for userId: {}", userId);
         Complaint complaint = complaintRepository.findById(request.getComplaintId())
-                .orElseThrow(() -> new RuntimeException("Complaint not found with id: " + request.getComplaintId()));
+                .orElseThrow(() -> new NotFoundException("Complaint not found with id: " + request.getComplaintId()));
 
-        IssueInterchangeDTO issue = issueClient.getIssueByResolvementReportId(request.getResolvementReportId()).getBody();
+        IssueInterchangeDTO issue = FeignCallDelegation.execute(
+                () -> issueClient.getIssueByResolvementReportId(request.getResolvementReportId())
+        );
 
         if(!issue.getId().equals(complaint.getIssueId()))
-            throw new RuntimeException("Resolvement Report does not belong to the Complaint's Issue");
+            throw new SemanticException("Resolvement Report does not belong to the Complaint's Issue");
 
         Feedback feedback = feedbackRepository.findByComplaintIdAndResolvementReportId(request.getComplaintId(), request.getResolvementReportId())
                 .orElse(
@@ -59,9 +59,8 @@ public class FeedbackService {
                 .userId(userId)
                 .totalFeedbacks(1L)
                 .build();
-        citizenProfile = citizenClient.internalUpdateProfile(citizenProfile).getBody();
-
-
-
+        FeignCallDelegation.execute(
+                () -> citizenClient.internalUpdateProfile(citizenProfile)
+        );
     }
 }

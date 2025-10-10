@@ -1,11 +1,13 @@
 package com.sih.IssueService.service;
 
+import com.sanskar.common.exception.FeignCallDelegation;
 import com.sanskar.sih.citizen.CitizenProfileResponseDTO;
 import com.sanskar.sih.issue.CommentRequestDTO;
 import com.sanskar.sih.issue.CommentResponseDTO;
 import com.sih.IssueService.client.CitizenClient;
 import com.sih.IssueService.model.Comment;
 import com.sih.IssueService.repository.CommentRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -16,13 +18,10 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor // for final or @NonNull fields
 public class CommentService {
-
-    @Autowired
-    private CitizenClient citizenClient;
-
-    @Autowired
-    private CommentRepository commentRepository;
+    private final CitizenClient citizenClient;
+    private final CommentRepository commentRepository;
 
     public Page<CommentResponseDTO> getCommentsForIssue(String issueId, Pageable pageable) {
         return commentRepository.findAllCommentsByIssueId(issueId, pageable)
@@ -35,7 +34,9 @@ public class CommentService {
                 .totalComments(1L)
                 .build();
 
-        citizenProfile = citizenClient.internalUpdateProfile(citizenProfile).getBody();
+        CitizenProfileResponseDTO updatedProfile = FeignCallDelegation.execute(
+                () -> citizenClient.internalUpdateProfile(citizenProfile)
+        );
 
         return new CommentResponseDTO(
                 commentRepository.save(
@@ -43,8 +44,8 @@ public class CommentService {
                                 .id(UUID.randomUUID().toString())
                                 .content(request.getContent())
                                 .timestamp(LocalDateTime.now())
-                                .citizenId(citizenProfile.getId())
-                                .citizenName(citizenProfile.getFullName())
+                                .citizenId(updatedProfile.getId())
+                                .citizenName(updatedProfile.getFullName())
                                 .build()
                 )
         );

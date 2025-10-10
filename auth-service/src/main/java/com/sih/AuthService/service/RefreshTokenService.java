@@ -1,5 +1,6 @@
 package com.sih.AuthService.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -10,10 +11,9 @@ import java.util.Set;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class RefreshTokenService {
-
-    @Autowired
-    private RedisTemplate<String, String> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
 
     private static final Duration TOKEN_EXPIRY = Duration.ofDays(7); // ttl(Time To Live)
 

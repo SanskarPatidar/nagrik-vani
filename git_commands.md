@@ -44,8 +44,22 @@
 4. git push # for subsequent pushes of current branch
 5. git push origin [local-branch-name]:[remote-branch-name]
 6. git push --force-with-lease origin [local-branch-name] # push safely, if remote branch has been updated, it will refuse to push, then we will need to pull, merge, resolve conflicts and then push again
+# "I know my history is different. I did this on purpose. Please replace your branch with my new, cleaner version.", works in fast forward rule where normal push won't
 7. git fetch origin # fetches changes from remote but does not merge them, it updates the remote tracking branches
 8. git rebase origin/[branch-name] # rebase current branch on top of the fetched remote tracking branch
+```
+--------------------------------------------------------------------
+## Stashing
+Choose this option if the changes are a work-in-progress and you're not ready to make a permanent commit for them yet.
+
+git stash is like a temporary clipboard for your changes. It takes all your uncommitted modifications, puts them on a safe "shelf," and cleans your working directory so you can switch branches.
+
+IT IS A COMMON CLIPBOARD AMONG ALL BRANCHES OF ENTIRE LOCAL REPOSITORY.
+```bash
+1. git stash push -m "Updating git commands doc" # stash current changes with message on top of stash stack, for 
+2. git stash list # list all stashed changes
+3. git stash pop # apply the most recent stash and remove it from the stash stack
+4. git stash apply stash@{n} # apply a specific stash without removing it from the stash stack
 ```
 --------------------------------------------------------------------
 ## Branching and Merging commands
