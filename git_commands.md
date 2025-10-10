@@ -45,8 +45,9 @@
 5. git push origin [local-branch-name]:[remote-branch-name]
 6. git push --force-with-lease origin [local-branch-name] # push safely, if remote branch has been updated, it will refuse to push, then we will need to pull, merge, resolve conflicts and then push again
 # "I know my history is different. I did this on purpose. Please replace your branch with my new, cleaner version.", works in fast forward rule where normal push won't
-7. git fetch origin # fetches changes from remote but does not merge them, it updates the remote tracking branches
-8. git rebase origin/[branch-name] # rebase current branch on top of the fetched remote tracking branch
+7. git push --force origin [local-branch-name] # push unsafely, it will overwrite remote branch even if it has been updated, use with caution
+8. git fetch origin # fetches changes from remote but does not merge them, it updates the remote tracking branches
+9. git rebase origin/[branch-name] # rebase current branch on top of the fetched remote tracking branch
 ```
 --------------------------------------------------------------------
 ## Stashing
