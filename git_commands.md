@@ -80,8 +80,9 @@ IT IS A COMMON CLIPBOARD AMONG ALL BRANCHES OF ENTIRE LOCAL REPOSITORY.
 # more exploration required for rebase
 1. git branch [branch-name] # create new branch
 2. git branch -M [branch-name] # rename current branch to new branch name
-3. git switch -c [branch-name] [optional:commit-hash]# create and switch to new branch
+3. git switch -c [branch-name] [optional:commit-hash] # create and switch to new branch with specific commit, if exist then just switch
 4. git merge [branch-name] # Merge branch into current branch
+5. git branch -d [branch-name] # delete branch
 ```
 --------------------------------------------------------------------
 ## Undoing changes commands
@@ -97,4 +98,11 @@ IT IS A COMMON CLIPBOARD AMONG ALL BRANCHES OF ENTIRE LOCAL REPOSITORY.
 ## Diff commands
 ```bash
 1. git diff # explore this more
+```
+--------------------------------------------------------------------
+## After pull request is accepted
+```bash
+1. git switch main
+2. git pull origin main
+3. git branch -d [branch-name] # delete local branch
 ```
