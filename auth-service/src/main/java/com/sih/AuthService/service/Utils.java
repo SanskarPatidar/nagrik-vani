@@ -11,7 +11,6 @@ import java.util.UUID;
 @Component
 public class Utils {
 
-
     public String getAuthenticatedUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         return auth.getName();

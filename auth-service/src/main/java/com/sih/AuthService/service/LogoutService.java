@@ -3,6 +3,7 @@ package com.sih.AuthService.service;
 import com.sih.AuthService.repository.token.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -11,13 +12,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor // for final and @NonNull fields
 public class LogoutService implements LogoutHandler {
-
-    @Autowired
-    private TokenRepository tokenRepository;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
+    private final TokenRepository tokenRepository;
+    private final RefreshTokenService refreshTokenService;
 
     @Override
     @Transactional

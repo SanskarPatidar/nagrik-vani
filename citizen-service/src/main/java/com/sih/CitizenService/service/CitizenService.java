@@ -1,9 +1,11 @@
 package com.sih.CitizenService.service;
 
+import com.sanskar.common.exception.NotFoundException;
 import com.sanskar.sih.citizen.CitizenProfileRequestDTO;
 import com.sanskar.sih.citizen.CitizenProfileResponseDTO;
 import com.sih.CitizenService.model.CitizenProfile;
 import com.sih.CitizenService.repository.CitizenProfileRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import com.sanskar.sih.citizen.CitizenProfileInterchangeDTO;
@@ -13,20 +15,19 @@ import java.util.UUID;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor // for final or @NonNull fields
 public class CitizenService {
-
-    @Autowired
-    private CitizenProfileRepository citizenProfileRepository;
+    private final CitizenProfileRepository citizenProfileRepository;
 
     public CitizenProfileResponseDTO getProfile(String userId) {
-        log.info("Getting profile for userId: " + userId);
+        log.info("Getting profile for userId: {}", userId);
         CitizenProfile profile = citizenProfileRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Citizen profile not found."));
+                .orElseThrow(() -> new NotFoundException("Citizen profile not found."));
         return new CitizenProfileResponseDTO(profile);
     }
 
     public CitizenProfileResponseDTO upsertProfile(CitizenProfileRequestDTO citizenProfileRequestDTO, String userId) {
-        log.info("Upserting profile for userId: " + userId);
+        log.info("Upserting profile for userId: {}", userId);
         CitizenProfile profile = citizenProfileRepository.findByUserId(userId)
                 .orElse(new CitizenProfile());
 
@@ -44,17 +45,17 @@ public class CitizenService {
     }
 
     public CitizenProfileResponseDTO findByUserId(String userId) {
-        log.info("Finding citizen profile for userId: " + userId);
+        log.info("Finding citizen profile for userId: {}", userId);
         return new CitizenProfileResponseDTO(
                 citizenProfileRepository.findByUserId(userId)
-                        .orElseThrow(() -> new RuntimeException("Citizen profile not found."))
+                        .orElseThrow(() -> new NotFoundException("Citizen profile not found."))
         );
     }
 
     public CitizenProfileResponseDTO internalUpdateProfile(CitizenProfileResponseDTO profile) {
-        log.info("Updating citizen profile for userId: " + profile.getUserId());
+        log.info("Updating citizen profile for userId: {}", profile.getUserId());
         CitizenProfile existingProfile = citizenProfileRepository.findByUserId(profile.getUserId())
-                .orElseThrow(() -> new RuntimeException("Citizen profile not found."));
+                .orElseThrow(() -> new NotFoundException("Citizen profile not found."));
 
         if(profile.getFullName() != null)existingProfile.setFullName(profile.getFullName());
         if(profile.getAddress() != null)existingProfile.setAddress(profile.getAddress());
@@ -76,7 +77,7 @@ public class CitizenService {
         double score = (((4 * complaintScore) + (2 * commentScore) + (4 * feedbackScore)) / 10.0) * 10.0; // Scale to 0-10
 
         existingProfile.setCommunityScore(score);
-        log.info("Saved citizen profile: " + existingProfile);
+        log.info("Saved citizen profile: {}", existingProfile);
         return new CitizenProfileResponseDTO(citizenProfileRepository.save(existingProfile));
     }
 }

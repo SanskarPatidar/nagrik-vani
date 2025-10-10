@@ -15,7 +15,7 @@ import com.sih.AuthService.model.UserPrincipal;
 import com.sih.AuthService.repository.UserRepository;
 import com.sih.AuthService.repository.token.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -31,16 +31,11 @@ import java.util.List;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor // for final or @NonNull fields
 public class AuthService { // Main JWT business logic service class, MyUserDetailService is just for mapping
-
-    @Autowired
-    private JWTGenerator jwtGenerator;
-
-    @Autowired
-    private TokenRepository tokenRepository;
-
-    @Autowired
-    AuthenticationManager authManager;
+    private final JWTGenerator jwtGenerator;
+    private final TokenRepository tokenRepository;
+    private final AuthenticationManager authManager;
     /*
     Raw username and password from request body
     Spring creates a UsernamePasswordAuthenticationToken
@@ -48,24 +43,12 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
     Spring compares raw password with hashed password in DB
     Authenticated token created with authorities and saved in SecurityContext
      */
-
-    @Autowired
-    private MyUserDetailsService userDetailsService;
-
-    @Autowired
-    private UserRepository repo;
-
-    @Autowired
-    private PasswordEncoder encoder;
-
-    @Autowired
-    private RefreshTokenService refreshTokenService;
-
-    @Autowired
-    private Utils utils;
-
-    @Autowired
-    private CitizenClient citizenClient;
+    private final MyUserDetailsService userDetailsService;
+    private final UserRepository repo;
+    private final PasswordEncoder encoder;
+    private final RefreshTokenService refreshTokenService;
+    private final Utils utils;
+    private final CitizenClient citizenClient;
 
     @Transactional
     public AuthResponseDTO citizenRegister(RegisterRequestDTO registerRequestDTO) {
