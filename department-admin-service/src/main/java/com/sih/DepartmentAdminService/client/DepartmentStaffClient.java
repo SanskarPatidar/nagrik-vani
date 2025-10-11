@@ -19,8 +19,8 @@ public interface DepartmentStaffClient {
             @RequestHeader("x-user-id") String userId
     );
 
-    @PutMapping("/update-profile")
-    ResponseEntity<Void> updateStaffProfile(
-            @RequestBody DepartmentStaffProfileResponseDTO staffProfile
-    );
+//    @PutMapping("/update-profile")
+//    ResponseEntity<Void> updateStaffProfile(
+//            @RequestBody DepartmentStaffProfileResponseDTO staffProfile
+//    );
 }

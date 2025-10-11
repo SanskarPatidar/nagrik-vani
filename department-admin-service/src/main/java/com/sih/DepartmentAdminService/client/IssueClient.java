@@ -14,9 +14,9 @@ public interface IssueClient {
     @GetMapping("/get/{issueId}")
     ResponseEntity<IssueSearchResponseDTO> getIssueById(@PathVariable String issueId);
 
-    @PutMapping("/ack/{issueId}/{deptId}")
-    ResponseEntity<Void> acknowledgeIssue(
-            @PathVariable String issueId,
-            @PathVariable String deptId
-    );
+//    @PutMapping("/ack/{issueId}/{deptId}")
+//    ResponseEntity<Void> acknowledgeIssue(
+//            @PathVariable String issueId,
+//            @PathVariable String deptId
+//    );
 }

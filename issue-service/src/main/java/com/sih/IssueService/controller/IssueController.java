@@ -64,19 +64,17 @@ public class IssueController {
         return ResponseEntity.ok(issueService.createIssue(request));
     }
 
-    @PutMapping("/ack/{issueId}/{deptId}") // internal use
-    public ResponseEntity<Void> acknowledgeIssue(
-            @PathVariable String issueId,
-            @PathVariable String deptId
-    ) {
-        issueService.ackIssue(issueId, deptId);
-        return ResponseEntity.ok().build();
-    }
+//    @PutMapping("/ack/{issueId}/{deptId}") // internal use
+//    public ResponseEntity<Void> acknowledgeIssue(
+//            @PathVariable String issueId,
+//            @PathVariable String deptId
+//    ) {
+//        issueService.ackIssue(issueId, deptId);
+//        return ResponseEntity.ok().build();
+//    }
 
     @GetMapping("/get/resolvementReportId/{resId}") // internal use
     public ResponseEntity<IssueInterchangeDTO> getIssueByResolvementReportId(@PathVariable String resId) {
         return ResponseEntity.ok(issueService.getIssueByResolvementReportId(resId));
     }
-
-
 }

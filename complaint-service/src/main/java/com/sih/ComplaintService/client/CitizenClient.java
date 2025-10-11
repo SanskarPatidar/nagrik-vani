@@ -13,7 +13,7 @@ public interface CitizenClient {
     ResponseEntity<CitizenProfileResponseDTO> getCitizenProfile(@RequestHeader("x-user-id") String userId);
 
     @PostMapping("/profile/internal-update")
-    public ResponseEntity<CitizenProfileResponseDTO> internalUpdateProfile(
+    ResponseEntity<CitizenProfileResponseDTO> internalUpdateProfile(
             @RequestBody CitizenProfileResponseDTO profile
     );
 
