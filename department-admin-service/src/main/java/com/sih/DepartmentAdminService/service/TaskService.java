@@ -19,6 +19,7 @@ import com.sih.DepartmentAdminService.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class TaskService {
     private final DepartmentAdminProfileRepository departmentAdminProfileRepository;
     private final DepartmentStaffClient departmentStaffClient;
     private final IssueClient issueClient;
+    private final StreamBridge streamBridge;
 
     public TaskCreateResponseDTO createTask(TaskCreateRequestDTO request, String userId) {
 
@@ -113,7 +115,8 @@ public class TaskService {
         Double score = (double) tasksCompleted / (tasksCompleted + tasksFailed + 30) * 10.0; // Saturation factor of 30 to prevent drastic changes initially
         staffProfile.setWorkRating(score);
         log.info("Updated staff profile: {}", staffProfile);
-        FeignCallDelegation.execute(() -> departmentStaffClient.updateStaffProfile(staffProfile));
+//      FeignCallDelegation.execute(() -> departmentStaffClient.updateStaffProfile(staffProfile));
+        streamBridge.send("publish-staff-profile-update-out-0", staffProfile);
         task.setCompletedAt(LocalDateTime.now().toString());
         return new TaskCreateResponseDTO(taskRepository.save(task));
     }

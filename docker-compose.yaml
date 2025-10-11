@@ -41,7 +41,6 @@ services:
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
 
   # OBSERVABILITY TOOLS
-
   zipkin:
     image: openzipkin/zipkin:latest
     container_name: zipkin
@@ -67,8 +66,38 @@ services:
     depends_on:
       - prometheus
 
-  # MICROSERVICES
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      # Port for external connections (from your host machine)
+      - "9092:9092"
+      # Port for internal connections (from other Docker containers)
+      - "29092:29092"
+    environment:
+      # KRaft Mode Configuration
+      # A unique ID for the cluster. You can generate a new one with 'kafka-storage random-uuid'
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
 
+      # Listeners Configuration for both internal and external traffic ---
+      KAFKA_LISTENERS: 'INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093'
+      KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
+
+      # General Kafka Settings for a single-node setup ---
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Allows topics to be auto-created by your services (good for development)
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+
+  # MICROSERVICES
   # NOTE: Service within docker network can communication with each other using http://<service-name>:<service-port>/<endpoint>
   api-gateway:
     build:
@@ -92,6 +121,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+      - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   auth-service:
     build:
@@ -116,6 +146,7 @@ services:
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
       - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   citizen-service:
     build:
@@ -139,6 +170,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+      - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   complaint-service:
     build:
@@ -162,6 +194,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+      - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   department-admin-service:
     build:
@@ -185,6 +218,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+      - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   department-staff-service:
     build:
@@ -208,6 +242,7 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+      - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   issue-service:
     build:
@@ -231,4 +266,5 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
       - REDIS_PORT=${REDIS_PORT}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+      - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 

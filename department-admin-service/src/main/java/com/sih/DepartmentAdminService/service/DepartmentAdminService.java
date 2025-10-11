@@ -10,11 +10,14 @@ import com.sih.DepartmentAdminService.repository.DepartmentAdminProfileRepositor
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -22,14 +25,19 @@ import java.util.List;
 public class DepartmentAdminService {
     private final DepartmentAdminProfileRepository departmentAdminProfileRepository;
     private final IssueClient issueClient;
+    private final StreamBridge streamBridge;
 
     public void acknowledgeIssue(String issueId, String userId) {
         log.info("Acknowledging issue with issueId: {} by userId: {}", issueId, userId);
         var profile = departmentAdminProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new NotFoundException("Department admin not found"));
-        FeignCallDelegation.execute(
-                () -> issueClient.acknowledgeIssue(issueId, profile.getId())
-        );
+//        FeignCallDelegation.execute(
+//                () -> issueClient.acknowledgeIssue(issueId, profile.getId())
+//        );
+        Map<String, String> payload = new HashMap<>();
+        payload.put("issueId", issueId);
+        payload.put("deptId", profile.getId());
+        streamBridge.send("issue-acknowledge-by-dept-out-0", payload);
     }
 
     public Page<DepartmentAdminProfileResponseDTO> getAllDepartmentAdmins(Pageable pageable) {

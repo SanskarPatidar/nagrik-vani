@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 @FeignClient(name = "citizen-service", path = "/citizen")
 public interface CitizenClient {
 
-    @GetMapping("/profile")
-    ResponseEntity<CitizenProfileResponseDTO> getCitizenProfile(@RequestHeader("x-user-id") String userId);
+//    @GetMapping("/profile")
+//    ResponseEntity<CitizenProfileResponseDTO> getCitizenProfile(@RequestHeader("x-user-id") String userId);
 
     @PostMapping("/profile/internal-update")
     public ResponseEntity<CitizenProfileResponseDTO> internalUpdateProfile(
