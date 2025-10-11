@@ -8,6 +8,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 @FeignClient(name = "complaint-service", path = "/complaint")
 public interface ComplaintClient {
 
-    @PutMapping("/ack/issue/{issueId}")
-    ResponseEntity<Void> acknowledgeComplaints(@PathVariable String issueId);
+//    @PutMapping("/ack/issue/{issueId}")
+//    ResponseEntity<Void> acknowledgeComplaints(@PathVariable String issueId);
 }

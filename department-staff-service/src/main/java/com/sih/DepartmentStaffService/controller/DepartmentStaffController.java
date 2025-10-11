@@ -38,11 +38,11 @@ public class DepartmentStaffController {
         return ResponseEntity.ok(departmentStaffService.getMyProfile(userId));
     }
 
-    @PutMapping("/update-profile") // internal use
-    public ResponseEntity<Void> updateStaffProfile(@RequestBody DepartmentStaffProfileResponseDTO staffProfile) {
-        departmentStaffService.updateStaffProfile(staffProfile);
-        return ResponseEntity.ok().build();
-    }
+//    @PutMapping("/update-profile") // internal use
+//    public ResponseEntity<Void> updateStaffProfile(@RequestBody DepartmentStaffProfileResponseDTO staffProfile) {
+//        departmentStaffService.updateStaffProfile(staffProfile);
+//        return ResponseEntity.ok().build();
+//    }
 
     @PutMapping("/add-staff/{staffId}") // for super admin utility
     public ResponseEntity<DepartmentStaffProfileResponseDTO> addDepartmentStaff(
