@@ -42,10 +42,10 @@ public class ComplaintController {
         return ResponseEntity.ok(new PageResponse<>(complaintService.getAllComplaintsByIssueId(PageRequest.of(page, size), issueId)));
     }
 
-    @PutMapping("/ack/issue/{issueId}") // internal use
-    ResponseEntity<Void> acknowledgeComplaints(@PathVariable String issueId) {
-        complaintService.acknowledgeComplaints(issueId);
-        return ResponseEntity.ok().build();
-    }
+//    @PutMapping("/ack/issue/{issueId}") // internal use
+//    ResponseEntity<Void> acknowledgeComplaints(@PathVariable String issueId) {
+//        complaintService.acknowledgeComplaints(issueId);
+//        return ResponseEntity.ok().build();
+//    }
 
 }

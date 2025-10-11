@@ -1,5 +1,7 @@
 package com.sih.IssueService.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sanskar.common.exception.FeignCallDelegation;
 import com.sanskar.common.exception.ForbiddenAccessException;
 import com.sanskar.common.exception.NotFoundException;
@@ -16,6 +18,7 @@ import com.sih.IssueService.repository.ResolvementReportRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -32,6 +36,8 @@ public class IssueService {
     private final IssueRepository issueRepository;
     private final ComplaintClient complaintClient;
     private final ResolvementReportRepository resolvementReportRepository;
+    private final StreamBridge streamBridge;
+    private final ObjectMapper objectMapper;
 
     public Page<IssueSearchResponseDTO> getAllIssues(Pageable pageable) {
         log.info("Fetching all issues");
@@ -92,9 +98,11 @@ public class IssueService {
         issue.setStatus(IssueStatus.ACKNOWLEDGED);
         issueRepository.save(issue);
 
-        FeignCallDelegation.execute(
-                () -> complaintClient.acknowledgeComplaints(issueId)
-        );
+//        FeignCallDelegation.execute(
+//                () -> complaintClient.acknowledgeComplaints(issueId)
+//        );
+        Map<String, String> payload = Map.of("issueId", issueId);
+        streamBridge.send("issue-acknowledged-out-0", payload);
     }
 
     public void likeIssue(String issueId) {
