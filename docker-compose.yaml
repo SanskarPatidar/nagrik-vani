@@ -23,6 +23,12 @@ services:
       - "8761:8761"
     environment:
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ] # command run inside the container to check health
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s # Gives the service 15s to start up before the first check
 
   config-server:
     build:
@@ -35,10 +41,51 @@ services:
     ports:
       - "8888:8888"
     depends_on:
-      - service-registry # Waits for the registry to be running before starting.
+      service-registry: # Waits for the registry to be running before starting.
+        condition: service_healthy
     environment:
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8888/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  # DATABASES
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      # hardcoded credentials for the root user
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      # This persists the database data on local machine
+      - mongo-data:/data/db # named volume 'mongo-data', created at the bottom of this file
+    healthcheck:
+      test: [ "CMD", "mongosh", "--eval", "db.runCommand('ping')" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    # This command starts Redis and sets the password
+    command: redis-server --requirepass password
+    volumes:
+      # This persists Redis data on your local machine
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   # OBSERVABILITY TOOLS
   zipkin:
@@ -46,6 +93,12 @@ services:
     container_name: zipkin
     ports:
       - "9411:9411"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9411/zipkin/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   prometheus:
     image: prom/prometheus:latest
@@ -57,6 +110,11 @@ services:
       # NOTE: use .yml not .yaml for the filename extension
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command: --config.file=/etc/prometheus/prometheus.yml
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9090/-/healthy" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   grafana:
     image: grafana/grafana:latest
@@ -64,13 +122,20 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - prometheus
+      prometheus:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000/api/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
+  # MESSAGE BROKER
   kafka:
     image: confluentinc/cp-kafka:latest
     container_name: kafka
     ports:
-      # Port for external connections (from your host machine)
+      # Port for external connections (from our host machine)
       - "9092:9092"
       # Port for internal connections (from other Docker containers)
       - "29092:29092"
@@ -81,14 +146,12 @@ services:
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
-
       # Listeners Configuration for both internal and external traffic ---
       KAFKA_LISTENERS: 'INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093'
       KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
-
       # General Kafka Settings for a single-node setup ---
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
@@ -96,6 +159,11 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       # Allows topics to be auto-created by your services (good for development)
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
 
   # MICROSERVICES
   # NOTE: Service within docker network can communication with each other using http://<service-name>:<service-port>/<endpoint>
@@ -110,9 +178,14 @@ services:
     ports:
       - "8080:8080" # For internal port in docker image, order gets reversed: GitHub repo property > local property
     depends_on:
-      - service-registry
-      - config-server
-      - zipkin
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      redis:
+        condition: service_healthy
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -134,9 +207,16 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - service-registry
-      - config-server
-      - zipkin
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -159,9 +239,14 @@ services:
     ports:
       - "8082:8082"
     depends_on:
-      - service-registry
-      - config-server
-      - zipkin
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      mongo:
+        condition: service_healthy
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -183,9 +268,16 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - service-registry
-      - config-server
-      - zipkin
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      kafka:
+        condition: service_started
+      mongo:
+        condition: service_healthy
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -207,9 +299,16 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - service-registry
-      - config-server
-      - zipkin
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      kafka:
+        condition: service_started
+      mongo:
+        condition: service_healthy
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -231,9 +330,16 @@ services:
     ports:
       - "8085:8085"
     depends_on:
-      - service-registry
-      - config-server
-      - zipkin
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      kafka:
+        condition: service_started
+      mongo:
+        condition: service_healthy
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -255,9 +361,16 @@ services:
     ports:
       - "8086:8086"
     depends_on:
-      - service-registry
-      - config-server
-      - zipkin
+      service-registry:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      zipkin:
+        condition: service_started
+      kafka:
+        condition: service_started
+      mongo:
+        condition: service_healthy
     environment:
       - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -268,3 +381,6 @@ services:
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
+volumes: # tells Docker to create dedicated storage spaces, on local machine but docker protected
+  mongo-data:
+  redis-data:

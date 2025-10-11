@@ -10,6 +10,7 @@ on:
     paths:
       - 'api-gateway/**'          # Trigger when files in the api-gateway source folder change.
       - 'pom.xml'               # Trigger when the root pom.xml file changes (e.g., dependency updates).
+      - docker-compose.yaml
 
 # 'jobs' defines one or more tasks that the workflow will execute, runs in parallel by default
 jobs:

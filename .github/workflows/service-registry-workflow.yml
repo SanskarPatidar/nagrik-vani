@@ -6,6 +6,7 @@ on:
     paths:
       - 'service-registry/**'
       - 'pom.xml'
+      - docker-compose.yaml
 
 jobs:
   build-and-deploy:
