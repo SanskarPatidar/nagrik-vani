@@ -29,10 +29,10 @@ public class CitizenService {
     public CitizenProfileResponseDTO upsertProfile(CitizenProfileRequestDTO citizenProfileRequestDTO, String userId) {
         log.info("Upserting profile for userId: {}", userId);
         CitizenProfile profile = citizenProfileRepository.findByUserId(userId)
-                .orElse(new CitizenProfile());
+                .orElse(new CitizenProfile()); // find existing or create new
 
-        profile.setId(UUID.randomUUID().toString());
-        profile.setUserId(userId);
+        if(profile.getId() == null)profile.setId(UUID.randomUUID().toString());
+        if(profile.getUserId() == null)profile.setUserId(userId);
         if(profile.getTotalComplaints() == null)profile.setTotalComplaints(0L);
         if(profile.getTotalComments() == null)profile.setTotalComments(0L);
         if(profile.getTotalFeedbacks() == null)profile.setTotalFeedbacks(0L);

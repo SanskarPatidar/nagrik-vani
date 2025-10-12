@@ -1,6 +1,8 @@
 ```bash
 1. git help # then follow after more commands
 ```
+TIP: Add [skip-ci] in commit message to skip CI/CD pipeline for that commit.
+
 --------------------------------------------------------------------
 ## Symbols
 ```bash

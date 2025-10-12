@@ -8,6 +8,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +26,7 @@ ANSWER: Hold this validated token to later access in code and no need to call re
  */
 
 @Component
+@Slf4j
 public class JWTFilter extends OncePerRequestFilter { // Ensures it runs once per request
 
     @Autowired
@@ -71,6 +73,7 @@ public class JWTFilter extends OncePerRequestFilter { // Ensures it runs once pe
                 authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authToken); // This sets the authentication in the SecurityContext, allowing Spring Security to recognize the user for this request.
             }
+            else log.info("Invalid token: {}", token);
         }
 
 

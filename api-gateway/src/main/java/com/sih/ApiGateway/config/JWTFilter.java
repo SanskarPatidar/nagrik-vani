@@ -1,30 +1,28 @@
 package com.sih.ApiGateway.config;
 
 import com.sanskar.sih.auth.ValidationResponseDTO;
-import com.sih.ApiGateway.client.AuthClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.*;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.server.ServerWebExchange;
+import reactor.core.publisher.Mono;
 
 @Component
 public class JWTFilter extends AbstractGatewayFilterFactory<JWTFilter.Config> {
 
     @Autowired
-    @Lazy
-    private AuthClient authClient;
-
-    @Autowired
     private RouteValidator validator;
 
-    @Autowired
-    private RestTemplate template;
+    ;
 //    @Autowired
 //    private JwtUtil jwtUtil;
+
+    @Autowired
+    private WebClient.Builder webClientBuilder; // this is reactive environment, so use webclient or rest template
 
     public JWTFilter() {
         super(Config.class);
@@ -54,33 +52,33 @@ public class JWTFilter extends AbstractGatewayFilterFactory<JWTFilter.Config> {
                 if (authHeader != null && authHeader.startsWith("Bearer ")) {
                     authHeader = authHeader.substring(7);
                 }
-                try {
+                return webClientBuilder.build().get()
+                        .uri("lb://auth-service/auth/validate")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + authHeader)
+                        .retrieve()
+                        .bodyToMono(ValidationResponseDTO.class)
+                        .flatMap(result -> {
+                            // If successful, add headers to the request and pass it down the chain
+                            ServerHttpRequest modifiedRequest = exchange.getRequest()
+                                    .mutate()
+                                    .header("x-user-id", result.getUserId())
+                                    .header("x-username", result.getUsername())
+                                    .build(); // The .build() method is CRITICAL
 
-
-
-                    System.out.println("calling Gateway Filter...!");
-
-                    ResponseEntity<ValidationResponseDTO> response = authClient
-                            .validateToken("Bearer " + authHeader);
-
-                    ValidationResponseDTO result = response.getBody();
-
-
-                    ServerHttpRequest modifiedRequest =  exchange.getRequest()
-                            .mutate()
-                            .header("x-user-id", result.getUserId())
-                            .header("x-username", result.getUsername())
-                            .build();
-
-                    return chain.filter(exchange.mutate().request(modifiedRequest).build());
-
-                } catch (Exception e) {
-                    System.out.println("invalid access...!");
-                    throw new RuntimeException("un authorized access to application");
-                }
+                            return chain.filter(exchange.mutate().request(modifiedRequest).build());
+                        })
+                        .onErrorResume(e -> {
+                            System.out.println("Token validation failed: " + e.getMessage());
+                            return onError(exchange, "Unauthorized access to application", HttpStatus.UNAUTHORIZED);
+                        });
             }
             return chain.filter(exchange);
         });
+    }
+
+    private Mono<Void> onError(ServerWebExchange exchange, String err, HttpStatus httpStatus) {
+        exchange.getResponse().setStatusCode(httpStatus);
+        return exchange.getResponse().setComplete();
     }
 
     public static class Config {

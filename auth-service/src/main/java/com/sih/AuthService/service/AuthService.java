@@ -1,6 +1,8 @@
 package com.sih.AuthService.service;
 
 
+import com.sanskar.common.exception.FeignCallDelegation;
+import com.sanskar.common.exception.NotFoundException;
 import com.sanskar.sih.citizen.CitizenProfileRequestDTO;
 import com.sanskar.sih.citizen.CitizenProfileResponseDTO;
 import com.sih.AuthService.client.CitizenClient;
@@ -16,6 +18,7 @@ import com.sih.AuthService.repository.UserRepository;
 import com.sih.AuthService.repository.token.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,6 +35,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor // for final or @NonNull fields
+@Slf4j
 public class AuthService { // Main JWT business logic service class, MyUserDetailService is just for mapping
     private final JWTGenerator jwtGenerator;
     private final TokenRepository tokenRepository;
@@ -53,10 +57,10 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
     @Transactional
     public AuthResponseDTO citizenRegister(RegisterRequestDTO registerRequestDTO) {
         if (repo.existsByUsername(registerRequestDTO.getUsername())) {
-            throw new RuntimeException("Username already exists.");
+            throw new NotFoundException("Username already exists.");
         }
         if(repo.existsByEmail(registerRequestDTO.getEmail())) {
-            throw new RuntimeException("Email already exists.");
+            throw new NotFoundException("Email already exists.");
         }
 
         User user = User.builder()
@@ -79,7 +83,9 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
         // Creating citizen profile
         CitizenProfileRequestDTO body = new CitizenProfileRequestDTO();
         body.setFullName(user.getUsername());
-        CitizenProfileResponseDTO result = citizenClient.upsertProfile(body, user.getId()).getBody();
+        FeignCallDelegation.execute(
+                () -> citizenClient.upsertProfile(body, user.getId())
+        );
 
         return AuthResponseDTO.builder()
                 .accessToken(accessToken)
@@ -186,6 +192,7 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
     }
 
     public ValidationResponseDTO validateToken() {
+        log.info("Validating token with userId: {} and username: {}", utils.getAuthenticatedUserId(), utils.getAuthenticatedUsername());
         return ValidationResponseDTO.builder()
                 .userId(utils.getAuthenticatedUserId())
                 .username(utils.getAuthenticatedUsername())
