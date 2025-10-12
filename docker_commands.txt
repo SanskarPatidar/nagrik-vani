@@ -11,6 +11,7 @@ docker-compose --help : Get help on docker-compose commands
 docker login : Log in to Docker Hub
 docker-compose build : Build or rebuild services defined in docker-compose.yml
 docker push <docker-username>/service-registry:0.0.1-SNAPSHOT : push an image to Docker Hub, this is image name, can also do this from docker desktop if have conventional name of image
+docker-compose pull : Pulls images for services defined in docker-compose.yml, do after commiting on github, to update local images with latest version
 
 docker-compose up -d : Start all services
 docker-compose up --build -d : Rebuild and start all services
