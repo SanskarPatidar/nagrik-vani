@@ -9,17 +9,20 @@ import java.util.function.Predicate;
 @Component
 public class RouteValidator {
 
+    // handle ** with care
     public static final List<String> openApiEndpoints = List.of(
             "/auth/register-citizen",
             "/auth/login",
+            "/auth/refresh",
             "/eureka",
             "/docs",
-            "/v3/api-docs/**",        // <-- OpenAPI JSON
+            "/v3/api-docs",
             "/swagger-ui.html",
-            "/swagger-ui/**",
-            "/webjars/**"
+            "/swagger-ui",
+            "/webjars"
     );
 
+    // skip filter for these endpoints
     public Predicate<ServerHttpRequest> isSecured =
             request -> openApiEndpoints
                     .stream()
