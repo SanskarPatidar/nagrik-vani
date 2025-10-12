@@ -130,6 +130,7 @@ Once all services are running, you can access the various parts of the system fr
 | **Grafana** | `http://localhost:3000` | Dashboards for monitoring. (Login: `admin`/`admin`) |
 | **Prometheus** | `http://localhost:9090` | Metrics collection server. (Check `Status > Targets`) |
 | **Zipkin** | `http://localhost:9411` | Distributed tracing UI. |
+| **Kafka** | `http://localhost:8090` | Kafka Dashboard |
 
 ## Stopping the Application
 
