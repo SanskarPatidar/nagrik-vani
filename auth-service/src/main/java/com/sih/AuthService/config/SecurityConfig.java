@@ -44,6 +44,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(request -> request
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // allow preflight
                         .requestMatchers(
+                                "/actuator/**",
                                 "/auth/register-citizen", // manually from here or do from jwt filter
                                 "/auth/login",
                                 "/oauth/google/callback",
