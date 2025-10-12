@@ -13,7 +13,7 @@ The system is built on a distributed, event-driven microservices architecture to
 
 **Core Infrastructure:**
 * **Service Registry (Eureka):** For dynamic service discovery.
-* **Config Server:** Centralized configuration management for all services, backed by a Git repository.
+* **Config Server:** Centralized configuration management for all services, backed by a Git repository. View configuration files here: https://github.com/SanskarPatidar/Sih-Config-Server-Files
 * **API Gateway:** A single entry point for all client requests, handling routing, security, and cross-cutting concerns.
 * **Message Broker (Kafka):** For asynchronous communication between services, ensuring decoupling and fault tolerance.
 
