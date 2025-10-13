@@ -1,15 +1,15 @@
 package com.sih.AuthService.config;
 
 
-import com.sih.AuthService.repository.token.TokenRepository;
+import com.sih.AuthService.repository.TokenRepository;
 import com.sih.AuthService.service.JWTGenerator;
 import com.sih.AuthService.service.MyUserDetailsService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,31 +27,16 @@ ANSWER: Hold this validated token to later access in code and no need to call re
 
 @Component
 @Slf4j
+@RequiredArgsConstructor
 public class JWTFilter extends OncePerRequestFilter { // Ensures it runs once per request
-
-    @Autowired
-    private JWTGenerator jwtGenerator;
-
-    @Autowired
-    private TokenRepository tokenRepository;
-
-    @Autowired
-    private MyUserDetailsService myUserDetailsService;
+    private final JWTGenerator jwtGenerator;
+    private final TokenRepository tokenRepository;
+    private final MyUserDetailsService myUserDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
-//        if (HttpMethod.OPTIONS.matches(request.getMethod())) {
-//            response.setStatus(HttpServletResponse.SC_OK); // important
-//            filterChain.doFilter(request, response);
-//            return;
-//        }
-
-        String path = request.getRequestURI();
-        if(path.equals("/auth/refresh")){ // still works without this but let's avoid further processing
-            filterChain.doFilter(request, response);
-            return;
-        }
+        // endpoints mentioned in SecurityConfig as permitAll() still gets processed through filters
+        // can override shouldNotFilter() function of OncePerRequestFilter to skip filtering for specific endpoints
 
         String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
         String token = null;
@@ -61,6 +46,7 @@ public class JWTFilter extends OncePerRequestFilter { // Ensures it runs once pe
             token = authHeader.substring(7);
             username = jwtGenerator.extractUserName(token);
         }
+        else log.info("Bearer token is null");
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) { // Prevents re-authentication, This ensures we only authenticate if not already done for this request.
             UserDetails userDetails = myUserDetailsService.loadUserByUsername(username);
@@ -75,6 +61,7 @@ public class JWTFilter extends OncePerRequestFilter { // Ensures it runs once pe
             }
             else log.info("Invalid token: {}", token);
         }
+        else log.info("Username is null or context is not null, username: {}, context: {}", username, SecurityContextHolder.getContext().getAuthentication());
 
 
         filterChain.doFilter(request, response); // Continue with the filter chain, allowing the request to proceed to the next filter or endpoint

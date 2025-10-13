@@ -33,3 +33,6 @@ docker-compose --env-file <env-file-path> build <service-name> : Just build a sp
 
 # debugging
 docker-compose --env-file <env-file-path> config : Validate and view the effective configuration: Useful for checking that your docker-compose.yml and .env files are set up correctly.
+
+# if stale images on local
+pull -> build -> up

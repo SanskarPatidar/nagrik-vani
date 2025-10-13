@@ -10,6 +10,7 @@ import com.sih.AuthService.service.AuthService;
 import com.sih.AuthService.service.LogoutService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,20 +18,15 @@ import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 
-//@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
-
-    @Autowired
-    private AuthService userSecurityService;
-
-    @Autowired
-    private LogoutService logoutService;
+    private final AuthService userSecurityService;
+    private final LogoutService logoutService;
 
     @PostMapping("/register-citizen")
     public ResponseEntity<AuthResponseDTO> registerCitizen(@RequestBody RegisterRequestDTO registerRequestDTO){
-        System.out.println("Registering citizen: " + registerRequestDTO);
         return ResponseEntity.ok(userSecurityService.citizenRegister(registerRequestDTO));
     }
 

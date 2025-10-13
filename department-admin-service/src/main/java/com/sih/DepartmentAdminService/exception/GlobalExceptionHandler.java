@@ -69,7 +69,7 @@ public class GlobalExceptionHandler {
                 .timestamp(e.getErrorResponse().getTimestamp())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
-                .message("The request could not be processed due to invalid data.") // send generic message to client
+                .message("The request could not be processed due to invalid data") // send generic message to client
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity
@@ -84,7 +84,7 @@ public class GlobalExceptionHandler {
                 .timestamp(e.getErrorResponse().getTimestamp())
                 .status(HttpStatus.BAD_GATEWAY.value())
                 .error(HttpStatus.BAD_GATEWAY.getReasonPhrase())
-                .message("A downstream service encountered an error. Please try again later.")
+                .message("A downstream service encountered an error, please try again later")
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity
@@ -116,7 +116,7 @@ public class GlobalExceptionHandler {
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
-                .message("An unexpected internal error occurred. Please contact support.")
+                .message("An unexpected internal error occurred, please contact support")
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity

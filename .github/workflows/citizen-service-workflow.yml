@@ -6,7 +6,6 @@ on:
     paths:
       - 'citizen-service/**'
       - 'pom.xml'
-      - docker-compose.yaml
 
 jobs:
   build-and-deploy:

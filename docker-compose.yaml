@@ -13,7 +13,7 @@ services:
     # 'image:' is the name and tag that will be assigned to the new image after it's built.
     # keep this consistent with the artifactId and version in pom.xml
     # conventional naming: <dockerhub-username>/<artifactId>:<version>
-    image: ${DOCKER_USERNAME}/service-registry:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/service-registry:latest
     # 'container_name:' gives the running container a fixed, predictable name.
     # This also becomes its hostname on the internal Docker network.
     container_name: service-registry
@@ -36,7 +36,7 @@ services:
       dockerfile: config-server/Dockerfile
       args:
         - MODULE_DIR=config-server
-    image: ${DOCKER_USERNAME}/config-server:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
@@ -185,7 +185,7 @@ services:
       dockerfile: api-gateway/Dockerfile
       args:
         - MODULE_DIR=api-gateway
-    image: ${DOCKER_USERNAME}/api-gateway:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/api-gateway:latest
     container_name: api-gateway
     ports:
       - "8080:8080" # For internal port in docker image, order gets reversed: GitHub repo property > local property
@@ -214,7 +214,7 @@ services:
       dockerfile: auth-service/Dockerfile
       args:
         - MODULE_DIR=auth-service
-    image: ${DOCKER_USERNAME}/auth-service:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/auth-service:latest
     container_name: auth-service
     ports:
       - "8081:8081"
@@ -246,7 +246,7 @@ services:
       dockerfile: citizen-service/Dockerfile
       args:
         - MODULE_DIR=citizen-service
-    image: ${DOCKER_USERNAME}/citizen-service:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/citizen-service:latest
     container_name: citizen-service
     ports:
       - "8082:8082"
@@ -275,7 +275,7 @@ services:
       dockerfile: complaint-service/Dockerfile
       args:
         - MODULE_DIR=complaint-service
-    image: ${DOCKER_USERNAME}/complaint-service:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/complaint-service:latest
     container_name: complaint-service
     ports:
       - "8083:8083"
@@ -306,7 +306,7 @@ services:
       dockerfile: department-admin-service/Dockerfile
       args:
         - MODULE_DIR=department-admin-service
-    image: ${DOCKER_USERNAME}/department-admin-service:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/department-admin-service:latest
     container_name: department-admin-service
     ports:
       - "8084:8084"
@@ -337,7 +337,7 @@ services:
       dockerfile: department-staff-service/Dockerfile
       args:
         - MODULE_DIR=department-staff-service
-    image: ${DOCKER_USERNAME}/department-staff-service:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/department-staff-service:latest
     container_name: department-staff-service
     ports:
       - "8085:8085"
@@ -368,7 +368,7 @@ services:
       dockerfile: issue-service/Dockerfile
       args:
         - MODULE_DIR=issue-service
-    image: ${DOCKER_USERNAME}/issue-service:0.0.1-SNAPSHOT
+    image: ${DOCKER_USERNAME}/issue-service:latest
     container_name: issue-service
     ports:
       - "8086:8086"

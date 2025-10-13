@@ -6,7 +6,6 @@ on:
     paths:
       - 'department-staff-service/**'
       - 'pom.xml'
-      - docker-compose.yaml
 
 jobs:
   build-and-deploy:

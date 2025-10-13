@@ -1,10 +1,11 @@
-package com.sih.ComplaintService.exception;
+package com.sih.AuthService.exception;
 
 import com.sanskar.common.exception.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -29,15 +30,30 @@ public class GlobalExceptionHandler {
                 .body(errorResponse);
     }
 
-    @ExceptionHandler(SemanticException.class)
-    public ResponseEntity<ErrorResponse> handleSemanticException(SemanticException e, HttpServletRequest request) {
-        log.error("SemanticException handled with message: {}", e.getMessage());
+    @ExceptionHandler(ResourceConflictException.class)
+    public ResponseEntity<ErrorResponse> handleResourceConflictException(ResourceConflictException e, HttpServletRequest request) {
+        log.error("ResourceConflictException handled with message: {}", e.getMessage());
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
-                .error(HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase())
+                .status(HttpStatus.CONFLICT.value())
+                .error(HttpStatus.CONFLICT.getReasonPhrase())
                 .message(e.getMessage())
-                .path(request.getRequestURI()) // only path, not full URL
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity
+                .status(errorResponse.getStatus())
+                .body(errorResponse);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException e, HttpServletRequest request) {
+        log.error("BadCredentialsException handled with message: {}", e.getMessage());
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(HttpStatus.UNAUTHORIZED.getReasonPhrase())
+                .message(e.getMessage()) // generic message
+                .path(request.getRequestURI())
                 .build();
         return ResponseEntity
                 .status(errorResponse.getStatus())
@@ -67,7 +83,7 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.BAD_GATEWAY.value())
                 .error(HttpStatus.BAD_GATEWAY.getReasonPhrase())
                 .message("A downstream service encountered an error, please try again later")
-                .path(request.getRequestURI()) // only path, not full URL
+                .path(request.getRequestURI())
                 .build();
         return ResponseEntity
                 .status(errorResponse.getStatus())
@@ -91,9 +107,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUncaughtException(Exception ex, HttpServletRequest request) {
-
         log.error("UncaughtException handled with message: {}", ex.getMessage());
-
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.value())

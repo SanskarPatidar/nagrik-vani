@@ -3,8 +3,8 @@ package com.sih.AuthService.service;
 
 import com.sanskar.common.exception.FeignCallDelegation;
 import com.sanskar.common.exception.NotFoundException;
+import com.sanskar.common.exception.ResourceConflictException;
 import com.sanskar.sih.citizen.CitizenProfileRequestDTO;
-import com.sanskar.sih.citizen.CitizenProfileResponseDTO;
 import com.sih.AuthService.client.CitizenClient;
 import com.sih.AuthService.dto.AuthResponseDTO;
 import com.sih.AuthService.dto.LoginRequestDTO;
@@ -15,7 +15,7 @@ import com.sih.AuthService.model.Token;
 import com.sih.AuthService.model.User;
 import com.sih.AuthService.model.UserPrincipal;
 import com.sih.AuthService.repository.UserRepository;
-import com.sih.AuthService.repository.token.TokenRepository;
+import com.sih.AuthService.repository.TokenRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,11 +56,12 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
 
     @Transactional
     public AuthResponseDTO citizenRegister(RegisterRequestDTO registerRequestDTO) {
+        log.info("Register citizen endpoint called with dto: {}", registerRequestDTO);
         if (repo.existsByUsername(registerRequestDTO.getUsername())) {
-            throw new NotFoundException("Username already exists.");
+            throw new ResourceConflictException("Username already exists");
         }
         if(repo.existsByEmail(registerRequestDTO.getEmail())) {
-            throw new NotFoundException("Email already exists.");
+            throw new ResourceConflictException("Email already exists");
         }
 
         User user = User.builder()
@@ -72,11 +73,13 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
                 .build();
         var savedUser = repo.save(user);
 
+        log.info("Generating access token and refresh token");
         String accessToken = jwtGenerator.generateAccessToken(user.getUsername());
         Token accessTokenEntity = utils.createToken(savedUser.getId(), accessToken);
 
         String refreshToken = jwtGenerator.generateRefreshToken(user.getUsername());
 
+        log.info("Save access token in db and refresh token in redis");
         tokenRepository.save(accessTokenEntity);
         refreshTokenService.storeRefreshToken(savedUser.getId(), accessTokenEntity.getDeviceId(), refreshToken); // Store refresh token in Redis
 
@@ -94,16 +97,17 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
                 .email(savedUser.getEmail())
                 .userId(savedUser.getId())
                 .deviceId(accessTokenEntity.getDeviceId())
-                .roles(List.of(Role.CITIZEN))
+                .roles(List.of(Role.USER))
                 .build();
     }
 
     @Transactional
     public AuthResponseDTO login(LoginRequestDTO loginRequestDTO) {
+        log.info("Login endpoint called with dto: {}", loginRequestDTO);
         try {
             // Calls UserDetailsService which was passed to AuthProvider in SecurityConfig
             // Authentication Object contains principal(UserDetails)
-            // Using this approach when we don't trust user's details
+            // Using this approach where we don't trust user's details
             // call it DELEGATED AUTHENTICATION
             Authentication authentication = authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequestDTO.getLoginString(), loginRequestDTO.getPassword())
@@ -132,12 +136,12 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
                     .build();
 
         } catch (BadCredentialsException ex) {
-            throw new BadCredentialsException("Invalid username or password.");
+            throw new BadCredentialsException("Invalid username or password");
         }
     }
 
-
     private void revokeAllUserTokens(User user, String deviceId) {
+        log.info("Revoking all tokens for user: {} on device: {}", user.getUsername(), deviceId);
         var validUserTokens = tokenRepository.findValidTokensByUserIdAndDeviceId(user.getId(), deviceId);
         if (validUserTokens.isEmpty())
             return;
@@ -151,18 +155,19 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
     }
 
     @Transactional
-    public AuthResponseDTO refresh(String deviceId, HttpServletRequest request) throws IOException {
+    public AuthResponseDTO refresh(String deviceId, HttpServletRequest request) {
+        log.info("Refresh endpoint called for device id: {}", deviceId);
         // JWT filter like validation
         String raw = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (raw == null || !raw.startsWith("Bearer ")) {
-            throw new BadCredentialsException("Missing or malformed token.");
+            throw new BadCredentialsException("Missing or malformed token");
         }
         String refreshToken = raw.substring(7);
         String username = jwtGenerator.extractUserName(refreshToken);
         if (username != null) {
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
             User user = repo.findByUsername(username)
-                    .orElseThrow(() -> new BadCredentialsException("User not found."));
+                    .orElseThrow(() -> new BadCredentialsException("User not found"));
             boolean isTokenValid = refreshTokenService.isRefreshTokenValid(user.getId(), deviceId, refreshToken); // this also validates for deviceId
 
             if (jwtGenerator.validateToken(refreshToken, userDetails) && isTokenValid) {
@@ -187,8 +192,10 @@ public class AuthService { // Main JWT business logic service class, MyUserDetai
                         .roles(user.getRoles())
                         .build();
             }
+            else log.info("Token validation failed or token is not valid in redis");
         }
-        throw new BadCredentialsException("Invalid refresh token.");
+        else log.info("Username extracted from token is null");
+        throw new BadCredentialsException("Invalid refresh token");
     }
 
     public ValidationResponseDTO validateToken() {

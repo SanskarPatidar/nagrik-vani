@@ -1,5 +1,6 @@
 package com.sih.AuthService.service;
 
+import com.sanskar.common.exception.NotFoundException;
 import com.sih.AuthService.model.UserPrincipal;
 import com.sih.AuthService.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,6 @@ public class MyUserDetailsService implements UserDetailsService { // for mapping
         return repo.findByUsername(loginString)
                 .or(() -> repo.findByEmail(loginString))
                 .map(UserPrincipal::new)
-                .orElseThrow(() -> new RuntimeException("User not found"));// in java, class has to be functional interface to have its constructor reference
+                .orElseThrow(() -> new NotFoundException("User not found"));// in java, class has to be functional interface to have its constructor reference
     }
 }

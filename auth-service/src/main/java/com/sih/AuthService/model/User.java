@@ -25,7 +25,7 @@ public class User {
     @Indexed(unique = true)
     private String email;
     @Builder.Default
-    private List<Role> roles = new ArrayList<>(List.of(Role.CITIZEN)); // Enum values are serialized as strings by mongo
+    private List<Role> roles = new ArrayList<>(List.of(Role.USER)); // Enum values are serialized as strings by mongo
     @Builder.Default
     boolean isPasswordSet = false;
 }
