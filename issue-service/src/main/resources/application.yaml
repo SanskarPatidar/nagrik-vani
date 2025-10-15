@@ -3,3 +3,8 @@ spring:
     name: issue-service # so by which name configuration needs to be fetched
   config:
     import: optional:configserver:${SPRING_CONFIG_SERVER_CONNECTION} # connection string to config server, optional means if config server is not available, app should start with default values
+info:
+  app:
+    name: @project.name@
+    description: @project.description@
+    version: @project.version@

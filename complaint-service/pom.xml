@@ -5,13 +5,12 @@
     <parent>
         <groupId>com.sih</groupId>
         <artifactId>nagrik-vani</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
 	<artifactId>complaint-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 	<name>complaint-service</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Service for handling citizen complaints and grievances</description>
 	<url/>
 	<licenses>
 		<license/>

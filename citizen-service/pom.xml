@@ -5,13 +5,12 @@
     <parent>
         <groupId>com.sih</groupId>
         <artifactId>nagrik-vani</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
 	<artifactId>citizen-service</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
 	<name>citizen-service</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Service for managing citizen profiles and user information</description>
 	<url/>
 	<licenses>
 		<license/>

@@ -8,3 +8,8 @@ spring:
       discovery:
         enabled: true
         service-id: config-server
+info:
+  app:
+    name: @project.name@
+    description: @project.description@
+    version: @project.version@

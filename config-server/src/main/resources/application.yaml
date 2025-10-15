@@ -45,3 +45,9 @@ management:
       # Inside Docker, the address of the zipkin container is its service name.
       endpoint: ${ZIPKIN_CONNECTION_URL}
 
+info:
+  app:
+    name: @project.name@
+    description: @project.description@
+    version: @project.version@
+

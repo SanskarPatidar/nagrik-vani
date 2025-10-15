@@ -14,10 +14,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Make Maven Wrapper executable
+        run: chmod +x mvnw
+
       - name: Prepare Maven Settings
         run: |
           # Decode and save to file in the repo root (build context)
           echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
+
+      - name: Extract Maven project version (using wrapper)
+        run: echo "PROJECT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
@@ -37,7 +43,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/citizen-service:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/citizen-service:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/citizen-service:0.0.1-SNAPSHOT
+            ${{ secrets.DOCKERHUB_USERNAME }}/citizen-service:${{ env.PROJECT_VERSION }}
           build-args: |
             MODULE_DIR=citizen-service
 
