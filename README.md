@@ -100,10 +100,8 @@ This is the most important step. You need to create a local `.env` file to hold 
 Now, from the root directory of the project, run this single command. It will build all the microservice images and start all containers in the correct order.
 
 ```bash
-docker-compose up --build -d
+docker-compose up -d
 ```
-
-The first time you run this, it will take several minutes to download base images and build all your services. Subsequent builds will be much faster.
 
 ### 4\. Verify that Everything is Running
 
