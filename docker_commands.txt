@@ -30,7 +30,7 @@ docker-compose restart prometheus : Restart a single service: Quickly restarts a
 docker-compose --env-file <env-file-path> up -d <service-name> : Start a specific service with a custom environment file
 docker-compose --env-file <env-file-path> up --build -d <service-name> : Rebuild and start a specific service with a custom environment file
 docker-compose --env-file <env-file-path> build <service-name> : Just build a specific service with a custom environment file
-
+docker-compose -f <compose-file-path(file name or path)> ... : Use a specific docker-compose file instead of the default docker-compose.yml
 # debugging
 docker-compose --env-file <env-file-path> config : Validate and view the effective configuration: Useful for checking that your docker-compose.yml and .env files are set up correctly.
 
