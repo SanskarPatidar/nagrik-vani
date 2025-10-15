@@ -16,6 +16,7 @@
 	<description>Demo project for Spring Boot</description>
     <packaging>pom</packaging> <!-- ***IMP,MUST*** It tells Maven that this project is a parent aggregator, not a buildable JAR -->
 
+
 	<url/>
 	<licenses>
 		<license/>
