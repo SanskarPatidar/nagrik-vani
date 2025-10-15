@@ -1,25 +1,49 @@
+# Q. Volumes?
+
 services:
+  # 'service-registry:' is the logical name you give to this service inside Docker Compose.
   service-registry:
+    # 'build:' tells Docker Compose to build a custom image from a Dockerfile.
+    build:
+      # 'context: .' specifies the build context. '.' means use the entire root project folder.
+      # This is crucial so Maven can find the parent pom.xml.
+      context: .
+      # relative to the context.
+      dockerfile: service-registry/Dockerfile
+      args:
+        - MODULE_DIR=service-registry
+    # 'image:' is the name and tag that will be assigned to the new image after it's built.
+    # keep this consistent with the artifactId and version in pom.xml
+    # conventional naming: <dockerhub-username>/<artifactId>:<version>
     image: ${DOCKER_USERNAME}/service-registry:latest
+    # 'container_name:' gives the running container a fixed, predictable name.
+    # This also becomes its hostname on the internal Docker network.
     container_name: service-registry
+    # 'ports:' is the section for mapping ports from your local machine to the container.
     ports:
+      # This is in the format "EXTERNAL_PORT:INTERNAL_PORT".
       - "8761:8761"
     environment:
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
     healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ]
+      test: [ "CMD", "curl", "-f", "http://localhost:8761/actuator/health" ] # command run inside the container to check health
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 15s # Gives the service 15s to start up before the first check
 
   config-server:
+    build:
+      context: .
+      dockerfile: config-server/Dockerfile
+      args:
+        - MODULE_DIR=config-server
     image: ${DOCKER_USERNAME}/config-server:latest
     container_name: config-server
     ports:
       - "8888:8888"
     depends_on:
-      service-registry:
+      service-registry: # Waits for the registry to be running before starting.
         condition: service_healthy
     environment:
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -38,10 +62,12 @@ services:
     ports:
       - "27017:27017"
     environment:
+      # hardcoded credentials for the root user
       - MONGO_INITDB_ROOT_USERNAME=root
       - MONGO_INITDB_ROOT_PASSWORD=password
     volumes:
-      - mongo-data:/data/db
+      # This persists the database data on local machine
+      - mongo-data:/data/db # named volume 'mongo-data', created at the bottom of this file
     healthcheck:
       test: [ "CMD", "mongosh", "--eval", "db.runCommand('ping')" ]
       interval: 10s
@@ -52,8 +78,10 @@ services:
     container_name: redis
     ports:
       - "6379:6379"
+    # This command starts Redis and sets the password
     command: redis-server --requirepass password
     volumes:
+      # This persists Redis data on your local machine
       - redis-data:/data
     healthcheck:
       test: [ "CMD", "redis-cli", "-a", "password", "ping" ]
@@ -80,6 +108,8 @@ services:
     ports:
       - "9090:9090"
     volumes:
+      # mounts your local prometheus config file inside the container
+      # NOTE: use .yml not .yaml for the filename extension
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     command: --config.file=/etc/prometheus/prometheus.yml
     healthcheck:
@@ -88,7 +118,7 @@ services:
       timeout: 5s
       retries: 5
 
-  grafana:
+  grafana: # username = admin, password = admin for dashboard login
     image: grafana/grafana:latest
     container_name: grafana
     ports:
@@ -107,25 +137,29 @@ services:
     image: confluentinc/cp-kafka:latest
     container_name: kafka
     ports:
+      # Port for external connections (from our host machine)
       - "9092:9092"
+      # Port for internal connections (from other Docker containers)
       - "29092:29092"
     environment:
+      # KRaft Mode Configuration
+      # A unique ID for the cluster. You can generate a new one with 'kafka-storage random-uuid'
       CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: 'broker,controller'
       KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
-
+      # Listeners Configuration for both internal and external traffic ---
       KAFKA_LISTENERS: 'INTERNAL://:29092,EXTERNAL://:9092,CONTROLLER://:9093'
       KAFKA_ADVERTISED_LISTENERS: 'INTERNAL://kafka:29092,EXTERNAL://localhost:9092'
       KAFKA_INTER_BROKER_LISTENER_NAME: 'INTERNAL'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT'
-
+      # General Kafka Settings for a single-node setup ---
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-
+      # Allows topics to be auto-created by your services (good for development)
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     healthcheck:
       test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
@@ -146,11 +180,17 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 'kafka:29092'
 
   # MICROSERVICES
+  # NOTE: Service within docker network can communication with each other using http://<service-name>:<service-port>/<endpoint>
   api-gateway:
+    build:
+      context: .
+      dockerfile: api-gateway/Dockerfile
+      args:
+        - MODULE_DIR=api-gateway
     image: ${DOCKER_USERNAME}/api-gateway:latest
     container_name: api-gateway
     ports:
-      - "8080:8080"
+      - "8080:8080" # For internal port in docker image, order gets reversed: GitHub repo property > local property
     depends_on:
       service-registry:
         condition: service_healthy
@@ -171,6 +211,11 @@ services:
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   auth-service:
+    build:
+      context: .
+      dockerfile: auth-service/Dockerfile
+      args:
+        - MODULE_DIR=auth-service
     image: ${DOCKER_USERNAME}/auth-service:latest
     container_name: auth-service
     ports:
@@ -198,6 +243,11 @@ services:
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   citizen-service:
+    build:
+      context: .
+      dockerfile: citizen-service/Dockerfile
+      args:
+        - MODULE_DIR=citizen-service
     image: ${DOCKER_USERNAME}/citizen-service:latest
     container_name: citizen-service
     ports:
@@ -222,6 +272,11 @@ services:
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   complaint-service:
+    build:
+      context: .
+      dockerfile: complaint-service/Dockerfile
+      args:
+        - MODULE_DIR=complaint-service
     image: ${DOCKER_USERNAME}/complaint-service:latest
     container_name: complaint-service
     ports:
@@ -248,6 +303,11 @@ services:
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   department-admin-service:
+    build:
+      context: .
+      dockerfile: department-admin-service/Dockerfile
+      args:
+        - MODULE_DIR=department-admin-service
     image: ${DOCKER_USERNAME}/department-admin-service:latest
     container_name: department-admin-service
     ports:
@@ -274,6 +334,11 @@ services:
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   department-staff-service:
+    build:
+      context: .
+      dockerfile: department-staff-service/Dockerfile
+      args:
+        - MODULE_DIR=department-staff-service
     image: ${DOCKER_USERNAME}/department-staff-service:latest
     container_name: department-staff-service
     ports:
@@ -300,6 +365,11 @@ services:
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
   issue-service:
+    build:
+      context: .
+      dockerfile: issue-service/Dockerfile
+      args:
+        - MODULE_DIR=issue-service
     image: ${DOCKER_USERNAME}/issue-service:latest
     container_name: issue-service
     ports:
@@ -325,6 +395,6 @@ services:
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
       - KAFKA_CONNECTION=${KAFKA_CONNECTION}
 
-volumes:
+volumes: # tells Docker to create dedicated storage spaces, on local machine but docker protected
   mongo-data:
   redis-data:

@@ -24,11 +24,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Step 1.1: Make Maven Wrapper executable
+      - name: Make Maven Wrapper executable
+        run: chmod +x mvnw
+
       # Step 2: Load settings.xml from GitHub Secrets to root dir
       - name: Prepare Maven Settings
         run: |
           # Decode and save to file in the repo root (build context)
           echo "${{ secrets.MAVEN_SETTINGS_XML }}" | base64 -d > settings.xml
+
+      # Step 2.1: Extract project version from pom.xml using Maven
+      - name: Extract Maven project version (using wrapper)
+        run: echo "PROJECT_VERSION=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)" >> $GITHUB_ENV
 
       # Step 3: Log to my docker account
       - name: Log in to Docker Hub
@@ -58,7 +66,7 @@ jobs:
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:latest 
             ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:0.0.1-SNAPSHOT
+            ${{ secrets.DOCKERHUB_USERNAME }}/api-gateway:${{ env.PROJECT_VERSION }}
           build-args: |
             MODULE_DIR=api-gateway
           # Enables caching between workflows

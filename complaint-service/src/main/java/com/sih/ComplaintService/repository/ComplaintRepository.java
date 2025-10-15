@@ -25,7 +25,7 @@ interface ComplaintRepositoryCustom {
 }
 
 @Repository
-class ComplaintRepositoryImpl implements ComplaintRepositoryCustom {
+class ComplaintRepositoryCustomImpl implements ComplaintRepositoryCustom {
 
     @Autowired
     private MongoTemplate mongoTemplate;
