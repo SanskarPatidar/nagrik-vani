@@ -3,3 +3,8 @@ spring:
     name: citizen-service
   config:
     import: optional:configserver:${SPRING_CONFIG_SERVER_CONNECTION}
+info:
+  app:
+    name: @project.name@
+    description: @project.description@
+    version: @project.version@

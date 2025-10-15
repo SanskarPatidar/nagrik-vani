@@ -11,7 +11,7 @@
 
 	<groupId>com.sih</groupId> <!-- also inherited to children -->
 	<artifactId>nagrik-vani</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>nagrik-vani</name>
 	<description>Demo project for Spring Boot</description>
     <packaging>pom</packaging> <!-- ***IMP,MUST*** It tells Maven that this project is a parent aggregator, not a buildable JAR -->
@@ -82,6 +82,12 @@
                 </plugin>
             </plugins>
         </pluginManagement>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
 	</build>
 
 </project>
