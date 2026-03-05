@@ -2,7 +2,8 @@ spring:
   application:
     name: citizen-service
   config:
-    import: optional:configserver:${SPRING_CONFIG_SERVER_CONNECTION}
+    import: configserver:${SPRING_CONFIG_SERVER_CONNECTION}
+
 info:
   app:
     name: @project.name@
