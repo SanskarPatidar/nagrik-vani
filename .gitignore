@@ -35,3 +35,4 @@ build/
 
 *.env
 settings.xml
+docker-compose-dev.yaml
