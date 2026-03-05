@@ -20,7 +20,7 @@ services:
       - "8888:8888"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
     environment:
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
       - ZIPKIN_CONNECTION_URL=${ZIPKIN_CONNECTION_URL}
@@ -95,7 +95,7 @@ services:
       - "3000:3000"
     depends_on:
       prometheus:
-        condition: service_healthy
+        condition: service_started
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:3000/api/health" ]
       interval: 10s
@@ -129,9 +129,10 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
     healthcheck:
       test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
-      interval: 15s
+      interval: 20s
       timeout: 10s
-      retries: 5
+      retries: 10
+      start_period: 60s
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
@@ -140,7 +141,7 @@ services:
       - "8090:8080"
     depends_on:
       kafka:
-        condition: service_healthy
+        condition: service_started
     environment:
       KAFKA_CLUSTERS_0_NAME: 'Local Kafka Cluster'
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 'kafka:29092'
@@ -153,13 +154,13 @@ services:
       - "8080:8080"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
       config-server:
         condition: service_healthy
       zipkin:
         condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -177,15 +178,15 @@ services:
       - "8081:8081"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
       config-server:
         condition: service_healthy
       zipkin:
         condition: service_started
       mongo:
-        condition: service_healthy
+        condition: service_started
       redis:
-        condition: service_healthy
+        condition: service_started
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -204,13 +205,13 @@ services:
       - "8082:8082"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
       config-server:
         condition: service_healthy
       zipkin:
         condition: service_started
       mongo:
-        condition: service_healthy
+        condition: service_started
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -228,7 +229,7 @@ services:
       - "8083:8083"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
       config-server:
         condition: service_healthy
       zipkin:
@@ -236,7 +237,7 @@ services:
       kafka:
         condition: service_started
       mongo:
-        condition: service_healthy
+        condition: service_started
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -254,7 +255,7 @@ services:
       - "8084:8084"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
       config-server:
         condition: service_healthy
       zipkin:
@@ -262,7 +263,7 @@ services:
       kafka:
         condition: service_started
       mongo:
-        condition: service_healthy
+        condition: service_started
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -280,7 +281,7 @@ services:
       - "8085:8085"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
       config-server:
         condition: service_healthy
       zipkin:
@@ -288,7 +289,7 @@ services:
       kafka:
         condition: service_started
       mongo:
-        condition: service_healthy
+        condition: service_started
     environment:
       - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
@@ -306,7 +307,7 @@ services:
       - "8086:8086"
     depends_on:
       service-registry:
-        condition: service_healthy
+        condition: service_started
       config-server:
         condition: service_healthy
       zipkin:
@@ -314,9 +315,9 @@ services:
       kafka:
         condition: service_started
       mongo:
-        condition: service_healthy
+        condition: service_started
     environment:
-      - SPRING_CONFIG_IMPORT=${SPRING_CONFIG_IMPORT}
+      - SPRING_CONFIG_SERVER_CONNECTION=${SPRING_CONFIG_SERVER_CONNECTION}
       - EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE=${EUREKA_CLIENT_SERVICE_URL_DEFAULTZONE}
       - MONGO_URI=${MONGO_URI}
       - REDIS_HOST=${REDIS_HOST}

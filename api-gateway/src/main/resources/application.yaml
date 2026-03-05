@@ -1,13 +1,19 @@
 spring:
   application:
     name: api-gateway # so by which name configuration needs to be fetched
-  config:
-    import: optional:configserver:${SPRING_CONFIG_SERVER_CONNECTION} # connection string to config server, optional means if config server is not available, app should start with default values
-  cloud:
-    config: # Configuration for Spring Cloud Config, config service discovery
-      discovery:
-        enabled: true
-        service-id: config-server
+  config: # here "configserver" is Spring Config Data Loader protocol
+    import: configserver:${SPRING_CONFIG_SERVER_CONNECTION} # connection string to config server, "optional:" means if config server is not available, app should start with default values rather than just failing
+#  cloud: # config server discovery using service registry
+#    config: # Configuration for Spring Cloud Config, config service discovery
+#      discovery:
+#        enabled: true
+#        service-id: config-server
+#      fail-fast: true # if true, the application will fail to start if it cannot connect to the config server. This is useful for ensuring that the application does not run with default or missing configurations.
+#      retry:
+#        initial-interval: 3000
+#        multiplier: 1.5
+#        max-attempts: 10
+#        max-interval: 10000
 info:
   app:
     name: @project.name@
