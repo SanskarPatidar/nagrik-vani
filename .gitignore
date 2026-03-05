@@ -36,3 +36,5 @@ build/
 *.env
 settings.xml
 docker-compose-dev.yaml
+docker_commands.txt
+git_commands.md
